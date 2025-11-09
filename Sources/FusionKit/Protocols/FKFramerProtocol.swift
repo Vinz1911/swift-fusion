@@ -15,17 +15,18 @@ internal protocol FKFramerProtocol: Sendable {
     /// The protocol's overhead per message is only `0x5` bytes, resulting in high performance.
     ///
     /// This protocol is based on a standardized Type-Length-Value Design Scheme.
+    init()
     
     /// Create a protocol conform message frame
     ///
     /// - Parameter message: generic type which conforms to 'Data' and 'String'
-    /// - Returns: generic Result type returning data and possible error
-    func create<T: FKMessage>(message: T) -> Result<Data, Error>
+    /// - Returns: the message data
+    func create<T: FKMessage>(message: T) async throws -> Data
     
     /// Parse a protocol conform message frame
     ///
     /// - Parameters:
     ///   - data: the data which should be parsed
-    ///   - completion: completion block returns generic Result type with parsed message and possible error
-    func parse(data: DispatchData, _ completion: (Result<FKMessage, Error>) -> Void) -> Void
+    ///   - completion: array containing `[FKMessage]`
+    func parse(data: Data) async throws -> [FKMessage]
 }

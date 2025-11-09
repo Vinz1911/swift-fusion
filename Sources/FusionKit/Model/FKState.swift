@@ -7,25 +7,28 @@
 //
 
 import Foundation
+import Network
 
-/// The `FKBytes` for input and output bytes
+/// The `FKBytes` for inbound and outbound bytes
 public struct FKBytes: Sendable {
-    public internal(set) var input: Int?
-    public internal(set) var output: Int?
+    public internal(set) var inbound: Int?
+    public internal(set) var outbound: Int?
+    
+    internal init(inbound: Int? = nil, outbound: Int? = nil) {
+        self.inbound = inbound
+        self.outbound = outbound
+    }
 }
 
 // MARK: - State Types -
 
-/// The `FKState` state handler
-@frozen
-public enum FKState: Sendable {
-    case ready
-    case cancelled
-    case failed(Error?)
-}
-
-/// The `FKResult` internal message transmitter
-internal enum FKResult: Sendable {
-    case message(FKMessage)
-    case bytes(FKBytes)
+/// The `FKEndpoint` where to connect
+public struct FKEndpoint: Sendable {
+    public let host: NWEndpoint.Host
+    public let port: NWEndpoint.Port
+    
+    public init(host: NWEndpoint.Host, port: NWEndpoint.Port) {
+        self.host = host
+        self.port = port
+    }
 }
