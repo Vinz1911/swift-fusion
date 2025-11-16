@@ -16,7 +16,7 @@ internal extension Int {
     static var minimum: Self { 0x1 }
     
     /// Maximum size of received bytes
-    static var maximum: Self { 0x10000 }
+    static var maximum: Self { 0x8000 }
 }
 
 internal extension UInt32 {
