@@ -9,44 +9,22 @@
 import Foundation
 import Network
 
-// MARK: - Timer -
-
-internal extension Timer {
-    /// Create a timeout timer
-    ///
-    /// - Parameters:
-    ///   - after: executed after given time
-    ///   - completion: completion
-    /// - Returns: a source timer
-    static func timeout(after: TimeInterval = 3.0, queue: DispatchQueue = .init(label: UUID().uuidString), _ completion: @escaping () -> Void) -> DispatchSourceTimer {
-        let dispatchTimer = DispatchSource.makeTimerSource(flags: .strict, queue: queue)
-        dispatchTimer.setEventHandler(handler: completion)
-        dispatchTimer.schedule(deadline: .now() + after, repeating: .never, leeway: .nanoseconds(.zero))
-        dispatchTimer.resume(); return dispatchTimer
-    }
-}
-
-// MARK: - Type Extensions -
-
-internal extension String {
-    /// identifier name
-    static var identifier: Self {
-        return "FusionKit.\(UUID().uuidString)"
-    }
-}
-
-internal extension UInt32 {
-    /// Convert integer to data with bigEndian
-    var bigEndianBytes: Data { withUnsafeBytes(of: self.bigEndian) { Data($0) } }
-}
+// MARK: - Int -
 
 internal extension Int {
     /// Minimum size of received bytes
     static var minimum: Self { 0x1 }
     
     /// Maximum size of received bytes
-    static var maximum: Self { 0x8000 }
+    static var maximum: Self { 0x10000 }
 }
+
+internal extension UInt32 {
+    /// Convert integer to data with bigEndian
+    var endian: Data { withUnsafeBytes(of: self.bigEndian) { Data($0) } }
+}
+
+// MARK: - Data -
 
 internal extension Data {
     /// Slice data into chunks
@@ -55,9 +33,27 @@ internal extension Data {
         return stride(from: .zero, to: count, by: size).map { subdata(in: $0..<(count - $0 > size ? $0 + size : count)) }
     }
     
-    /// Extract integers from data as big endian
-    var bigEndian: UInt32 {
+    /// Extract `UInt32` from data as big endian
+    var endian: UInt32? {
         guard !self.isEmpty else { return .zero }
         return UInt32(bigEndian: withUnsafeBytes { $0.load(as: UInt32.self) })
+    }
+}
+
+internal extension DispatchData {
+    /// Extract `UInt32` from `DispatchData`
+    ///
+    /// - Returns: the extracted length as `UInt32
+    func extractLength() -> UInt32? {
+        let length = Data(self.subdata(in: FusionConstants.opcode.rawValue..<FusionConstants.header.rawValue))
+        return length.endian
+    }
+    
+    /// Extract `Data` from `DispatchData`
+    ///
+    /// - Parameter length: the amount of bytes to extract
+    /// - Returns: the extracted bytes as `Data`
+    func extractPayload(length: UInt32) -> Data? {
+        return Data(self.subdata(in: FusionConstants.header.rawValue..<Int(length)))
     }
 }

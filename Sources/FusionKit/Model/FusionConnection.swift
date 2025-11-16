@@ -1,5 +1,5 @@
 //
-//  FKConnection.swift
+//  FusionConnection.swift
 //  FusionKit
 //
 //  Created by Vinzenz Weist on 07.06.21.
@@ -9,17 +9,17 @@
 import Foundation
 import Network
 
-public final class FKConnection: FKConnectionProtocol, @unchecked Sendable {
-    public var stateUpdateHandler: (@Sendable (FKState) -> Void) = { _ in }
-    private var result: (@Sendable (FKResult) -> Void) = { _ in }
-    private var timer: DispatchSourceTimer?
+public final class FusionConnection: FusionConnectionProtocol, @unchecked Sendable {
+    public var stateUpdateHandler: (@Sendable (FusionState) -> Void) = { _ in }
+    
+    private var result: (@Sendable (FusionResult) -> Void) = { _ in }
     private let queue: DispatchQueue
-    private let framer = FKFramer()
+    private let framer = FusionFramer()
     private let connection: NWConnection
     
-    /// The `FKConnection` is a custom network framing protocol and implements the `Fusion Framing Protocol`.
-    /// It's build on top of the `Network` framework standard library. A fast and lightweight Framing Protocol
-    /// allows to transmit data as fast as possible and allows a more fine grained control over the network flow.
+    /// The `FusionConnection` is a custom network connector that implements the **Fusion Framing Protocol (FFP)**.
+    /// It is built on top of the standard `Network` framework library. This fast and lightweight custom framing protocol
+    /// enables high-speed data transmission and provides fine-grained control over network flow.
     ///
     /// - Parameters:
     ///   - host: the host name as `String`
@@ -27,9 +27,9 @@ public final class FKConnection: FKConnectionProtocol, @unchecked Sendable {
     ///   - parameters: network framework `NWParameters`
     ///   - qos: quality of service class `DispatchQoS`
     public required init(host: String, port: UInt16, parameters: NWParameters = .tcp, qos: DispatchQoS = .userInteractive) throws {
-        if host.isEmpty { throw(FKError.missingHost) }; if port == .zero { throw(FKError.missingPort) }
+        if host.isEmpty { throw(FusionConnectionError.missingHost) }; if port == .zero { throw(FusionConnectionError.missingPort) }
         self.connection = NWConnection(host: NWEndpoint.Host(host), port: NWEndpoint.Port(integerLiteral: port), using: parameters)
-        self.queue = DispatchQueue(label: .identifier, qos: qos)
+        self.queue = DispatchQueue(label: UUID().uuidString, qos: qos)
     }
     
     /// Start a connection
@@ -37,7 +37,7 @@ public final class FKConnection: FKConnectionProtocol, @unchecked Sendable {
     /// - Returns: non returning
     public func start() -> Void {
         queue.async { [weak self] in guard let self else { return }
-            timeout(); handler(); discontiguous(); connection.start(queue: queue)
+            handler(); discontiguous(); connection.start(queue: queue)
         }
     }
     
@@ -53,7 +53,7 @@ public final class FKConnection: FKConnectionProtocol, @unchecked Sendable {
     /// Send messages to a connected host
     ///
     /// - Parameter message: generic type send `String`, `Data` and `UInt16` based messages
-    public func send<T: FKMessage>(message: T) -> Void {
+    public func send<T: FusionMessage>(message: T) -> Void {
         self.queue.async { [weak self] in guard let self else { return }
             processing(with: message)
         }
@@ -61,52 +61,36 @@ public final class FKConnection: FKConnectionProtocol, @unchecked Sendable {
     
     /// Receive a message from a connected host
     ///
-    /// - Parameter completion: contains `FKMessage` and `FKBytes` generic message typ
-    public func receive(_ completion: @Sendable @escaping (FKMessage?, FKBytes?) -> Void) -> Void {
+    /// - Parameter completion: contains `FusionMessage` and `FusionBytes` generic message typ
+    public func receive(_ completion: @Sendable @escaping (FusionMessage?, FusionBytes?) -> Void) -> Void {
         result = { if case .message(let message) = $0 { completion(message, nil) }; if case .bytes(let bytes) = $0 { completion(nil, bytes) } }
     }
 }
 
 // MARK: - Private API -
 
-private extension FKConnection {
-    /// Start timeout and cancel connection if timeout value is reached
-    ///
-    /// - Returns: non returning
-    private func timeout() -> Void {
-        timer = Timer.timeout(queue: queue) { [weak self] in
-            guard let self else { return }
-            cleanup(); stateUpdateHandler(.failed(FKError.connectionTimeout))
-        }
-    }
-    
-    /// Cancel a running timeout
-    ///
-    /// - Returns: non returning
-    private func invalidate() -> Void {
-        guard let timer else { return }
-        timer.cancel(); self.timer = nil
-    }
-    
+private extension FusionConnection {
     /// Process message data and send it to a host
     ///
     /// - Parameter data: message data
-    private func processing<T: FKMessage>(with message: T) -> Void {
-        let message = framer.create(message: message)
-        switch message {
-        case .success(let data): let queued = data.chunks; if !queued.isEmpty { for data in queued { transmission(data)} }
-        case .failure(let error): stateUpdateHandler(.failed(error)); cleanup() }
+    private func processing<T: FusionMessage>(with message: T) -> Void {
+        do {
+            let data = try framer.create(message: message)
+            let queued = data.chunks; if !queued.isEmpty { for data in queued { transmission(data)} }
+        } catch {
+            stateUpdateHandler(.failed(error)); cleanup()
+        }
     }
     
     /// Process message data and parse it into a conform message
     ///
     /// - Parameter data: message data
     private func processing(from data: DispatchData) -> Void {
-        framer.parse(data: data) { [weak self] result in
-            guard let self else { return }
-            switch result {
-            case .success(let message): self.result(.message(message))
-            case .failure(let error): stateUpdateHandler(.failed(error)); cleanup() }
+        do {
+            let messages = try framer.parse(data: data)
+            for message in messages { self.result(.message(message)) }
+        } catch {
+            stateUpdateHandler(.failed(error)); cleanup()
         }
     }
     
@@ -114,7 +98,7 @@ private extension FKConnection {
     ///
     /// - Returns: non returning
     private func cleanup() -> Void {
-        connection.cancel(); invalidate(); framer.reset()
+        connection.cancel(); framer.reset()
     }
     
     /// Connection state update handler handles different network connection states
@@ -126,7 +110,7 @@ private extension FKConnection {
             switch state {
             case .cancelled: stateUpdateHandler(.cancelled)
             case .failed(let error), .waiting(let error): cleanup(); stateUpdateHandler(.failed(error))
-            case .ready: invalidate(); stateUpdateHandler(.ready)
+            case .ready: stateUpdateHandler(.ready)
             default: break }
         }
     }
@@ -138,7 +122,7 @@ private extension FKConnection {
         connection.batch {
             connection.send(content: content, completion: .contentProcessed { [weak self] error in
                 guard let self else { return }
-                result(.bytes(FKBytes(output: content.count)))
+                result(.bytes(FusionBytes(outbound: content.count)))
                 if let error, error != NWError.posix(.ECANCELED) { stateUpdateHandler(.failed(error)) }
             })
         }
@@ -152,7 +136,7 @@ private extension FKConnection {
             connection.receiveDiscontiguous(minimumIncompleteLength: .minimum, maximumLength: .maximum) { [weak self] content, _, isComplete, error in
                 guard let self else { return }
                 if let error { guard error != NWError.posix(.ECANCELED) else { return }; stateUpdateHandler(.failed(error)); cleanup(); return }
-                if let content { result(.bytes(.init(input: content.count))); processing(from: content) }
+                if let content { result(.bytes(.init(inbound: content.count))); processing(from: content) }
                 if isComplete { cleanup() } else { discontiguous() }
             }
         }

@@ -1,5 +1,5 @@
 //
-//  FKConnectionProtocol.swift
+//  FusionConnectionProtocol.swift
 //  FusionKit
 //
 //  Created by Vinzenz Weist on 07.06.21.
@@ -9,13 +9,13 @@
 import Foundation
 import Network
 
-public protocol FKConnectionProtocol: Sendable {
-    /// The `FKConnectionState` update values
-    var stateUpdateHandler: (@Sendable (FKState) -> Void) { get set }
+public protocol FusionConnectionProtocol: Sendable {
+    /// The `FusionState` update values
+    var stateUpdateHandler: (@Sendable (FusionState) -> Void) { get set }
     
-    /// The `FKConnection` is a custom network framing protocol and implements the `Fusion Framing Protocol`.
-    /// It's build on top of the `Network` framework standard library. A fast and lightweight Framing Protocol
-    /// allows to transmit data as fast as possible and allows a more fine grained control over the network flow.
+    /// The `FusionConnection` is a custom network connector that implements the **Fusion Framing Protocol (FFP)**.
+    /// It is built on top of the standard `Network` framework library. This fast and lightweight custom framing protocol
+    /// enables high-speed data transmission and provides fine-grained control over network flow.
     ///
     /// - Parameters:
     ///   - host: the host name as `String`
@@ -37,10 +37,10 @@ public protocol FKConnectionProtocol: Sendable {
     /// Send messages to a connected host
     ///
     /// - Parameter message: generic type send `String`, `Data` and `UInt16` based messages
-    func send<T: FKMessage>(message: T) -> Void
+    func send<T: FusionMessage>(message: T) -> Void
     
     /// Receive a message from a connected host
     /// 
-    /// - Parameter completion: contains `FKMessage` and `FKBytes` generic message typ
-    func receive(_ completion: @Sendable @escaping (FKMessage?, FKBytes?) -> Void) -> Void
+    /// - Parameter completion: contains `FusionMessage` and `FusionBytes` generic message typ
+    func receive(_ completion: @Sendable @escaping (FusionMessage?, FusionBytes?) -> Void) -> Void
 }

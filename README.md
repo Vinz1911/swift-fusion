@@ -28,10 +28,10 @@ dependencies: [
 import FusionKit
 
 // create a new connection
-let connection = FKConnection(host: "example.com", port: 7878)
+let connection = FusionConnection(host: "example.com", port: 7878)
 
 // support for NWParameters, tls example:
-let connection = FKConnection(host: "example.com", port: 7878, parameters: .tls)
+let connection = FusionConnection(host: "example.com", port: 7878, parameters: .tls)
 
 // ...
 ```
@@ -42,7 +42,7 @@ let connection = FKConnection(host: "example.com", port: 7878, parameters: .tls)
 import FusionKit
 
 // create a new connection
-let connection = FKConnection(host: "example.com", port: 7878)
+let connection = FusionConnection(host: "example.com", port: 7878)
 
 // state update handler
 connection.stateUpdateHandler = { state in
@@ -66,7 +66,7 @@ connection.start()
 import FusionKit
 
 // create a new connection
-let connection = FKConnection(host: "example.com", port: 7878)
+let connection = FusionConnection(host: "example.com", port: 7878)
 
 // the framework accepts generic data types
 // send strings
@@ -85,7 +85,7 @@ connection.send(message: UInt16.max)
 import FusionKit
 
 // create a new connection
-let connection = FKConnection(host: "example.com", port: 7878)
+let connection = FusionConnection(host: "example.com", port: 7878)
 
 // read incoming messages and transmitted bytes count
 connection.receive { message, bytes in    

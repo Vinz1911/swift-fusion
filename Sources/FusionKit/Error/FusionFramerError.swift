@@ -1,5 +1,5 @@
 //
-//  FKError.swift
+//  FusionError.swift
 //  FusionKit
 //
 //  Created by Vinzenz Weist on 07.06.21.
@@ -8,12 +8,26 @@
 
 import Foundation
 
-/// The `FKConnection` specific errors
+// MARK: - Fusion Connection Error -
+
+/// The `FusionConnectionError` specific errors
 @frozen
-public enum FKError: Error, Sendable {
+public enum FusionConnectionError: Error, Sendable {
     case missingHost
     case missingPort
-    case connectionTimeout
+    
+    public var description: String {
+        switch self {
+        case .missingHost: return "missing host"
+        case .missingPort: return "missing port" }
+    }
+}
+
+// MARK: - Fusion Framer Error -
+
+/// The `FusionFramerError` specific errors
+@frozen
+public enum FusionFramerError: Error, Sendable {
     case parsingFailed
     case readBufferOverflow
     case writeBufferOverflow
@@ -21,9 +35,6 @@ public enum FKError: Error, Sendable {
     
     public var description: String {
         switch self {
-        case .missingHost: return "missing host"
-        case .missingPort: return "missing port"
-        case .connectionTimeout: return "connection timeout"
         case .parsingFailed: return "message parsing failed"
         case .readBufferOverflow: return "read buffer overflow"
         case .writeBufferOverflow: return "write buffer overflow"
