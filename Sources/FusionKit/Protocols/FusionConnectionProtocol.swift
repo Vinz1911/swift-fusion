@@ -24,7 +24,7 @@ public protocol FusionConnectionProtocol: Sendable {
     /// Start a connection
     ///
     /// - Returns: non returning
-    func start() async -> Void
+    func start() async throws -> Void
     
     /// Cancel the current connection
     ///

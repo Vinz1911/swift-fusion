@@ -34,7 +34,7 @@ public actor FusionConnection: FusionConnectionProtocol, Sendable {
     /// Start a connection
     ///
     /// - Returns: non returning
-    public func start() async -> Void {
+    public func start() async throws -> Void {
         connection = NetworkConnection(to: endpoint) { TCP() }
     }
     
@@ -43,6 +43,7 @@ public actor FusionConnection: FusionConnectionProtocol, Sendable {
     /// - Returns: non returning
     public func cancel() async -> Void {
         guard let connection else { return }
+        if let task { task.cancel() }
         connection.tryNextEndpoint()
     }
     
@@ -65,7 +66,6 @@ public actor FusionConnection: FusionConnectionProtocol, Sendable {
 // MARK: - Private API -
 
 private extension FusionConnection {
-    
     /// Process message data and send it to a host
     ///
     /// - Parameter message: generic type takes `FusionMessage`
@@ -92,6 +92,6 @@ private extension FusionConnection {
                 for message in messages { if let completion { try await completion(message) } }
             }
         }
-        //if let task { try await task.value }
+        if let task { try await task.value }
     }
 }

@@ -16,13 +16,12 @@ struct FusionKitTests {
     @Test("Send String")
     func sendString() async throws {
         let connection = try FusionConnection(host: "de0.weist.org", port: 7878)
-        await connection.start()
-        try await connection.send(message: "500")
+        try await connection.start()
+        try await connection.send(message: "10000")
         try await connection.receive { message, bytes in
-            var reference: Int = .zero
-            if let message = message as? Data { reference = message.count }
-            print("MESSAGE: \(message)")
-            #expect(reference == 10000)
+            if let message = message as? Data {
+                #expect(message.count == 10000)
+            }
             await connection.cancel()
         }
     }
@@ -30,31 +29,26 @@ struct FusionKitTests {
     @Test("Send Data")
     func sendData() async throws {
         let connection = try FusionConnection(host: "de0.weist.org", port: 7878)
-        await connection.start()
+        try await connection.start()
         try await connection.send(message: Data(count: 10000))
         try await connection.receive { message, bytes in
-            var reference: String = .init()
             if let message = message as? String {
-                reference = message
-                //#expect(reference == "10000")
-                print("MESSAGE: \(message)")
+                #expect(message == "10000")
             }
             await connection.cancel()
         }
-        try await Task.sleep(for: .seconds(1000))
     }
     /*
     @Test("Multi Message")
     func sendMultiple() async throws {
-        let connection = try FKConnection(host: "localhost", port: 7878)
+        let connection = try FusionConnection(host: "de0.weist.org", port: 7878)
         try await connection.start()
         try await connection.send(message: "1000000")
-        try await connection.receive { messages in
+        try await connection.receive { messages, _ in
             if let _ = messages as? Data { try await connection.send(message: "1000000") }
         }
     }
     */
-    
     @Test("Parse Message")
     func parseMessage() async throws {
         let framer = FusionFramer(); var count: Int = .zero
