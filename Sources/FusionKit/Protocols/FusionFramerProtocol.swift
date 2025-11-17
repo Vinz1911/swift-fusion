@@ -35,17 +35,17 @@ internal protocol FusionFramerProtocol: Sendable {
     /// Clear the message buffer
     ///
     /// Current message buffer will be cleared
-    func reset() -> Void
+    func reset() async -> Void
     
     /// Create a `FusionMessage` conform frame
     ///
     /// - Parameter message: generic type which conforms to `FusionMessage`
     /// - Returns: the message frame as `Data`
-    func create<T: FusionMessage>(message: T) throws -> Data
+    func create<T: FusionMessage>(message: T) async throws -> Data
     
     /// Parse a `FusionMessage` conform frame
     ///
-    /// - Parameter data: the `DispatchData` which holds the `FusionMessage`
+    /// - Parameter data: the `Data` which holds the `FusionMessage`
     /// - Returns: a collection of `FusionMessage`s and `Error`
-    func parse(data: DispatchData) throws -> [FusionMessage]
+    func parse(data: Data) async throws -> [FusionMessage]
 }

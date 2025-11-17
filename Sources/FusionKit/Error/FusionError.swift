@@ -15,11 +15,13 @@ import Foundation
 public enum FusionConnectionError: Error, Sendable {
     case missingHost
     case missingPort
+    case deadConnection
     
     public var description: String {
         switch self {
         case .missingHost: return "missing host"
-        case .missingPort: return "missing port" }
+        case .missingPort: return "missing port"
+        case .deadConnection: return "dead connection" }
     }
 }
 

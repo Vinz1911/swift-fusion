@@ -38,9 +38,7 @@ internal extension Data {
         guard !self.isEmpty else { return .zero }
         return UInt32(bigEndian: withUnsafeBytes { $0.load(as: UInt32.self) })
     }
-}
-
-internal extension DispatchData {
+    
     /// Extract `UInt32` from `DispatchData`
     ///
     /// - Returns: the extracted length as `UInt32

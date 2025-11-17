@@ -8,21 +8,21 @@
 
 import Foundation
 
-internal final class FusionFramer: FusionFramerProtocol, @unchecked Sendable {
-    private var buffer: DispatchData = .empty
+internal final actor FusionFramer: FusionFramerProtocol, Sendable {
+    private var buffer: Data = .init()
     
     /// Clear the message buffer
     ///
     /// Current message buffer will be cleared
-    internal func reset() -> Void {
-        buffer = .empty
+    internal func reset() async -> Void {
+        buffer = .init()
     }
     
     /// Create a `FusionMessage` conform frame
     ///
     /// - Parameter message: generic type which conforms to `FusionMessage`
     /// - Returns: the message frame as `Data`
-    internal func create<T: FusionMessage>(message: T) throws -> Data {
+    internal func create<T: FusionMessage>(message: T) async throws -> Data {
         let total = message.raw.count + FusionConstants.header.rawValue
         guard total <= FusionConstants.frame.rawValue else { throw FusionFramerError.writeBufferOverflow }
         var frame = Data()
@@ -34,9 +34,9 @@ internal final class FusionFramer: FusionFramerProtocol, @unchecked Sendable {
     
     /// Parse a `FusionMessage` conform frame
     ///
-    /// - Parameter data: the `DispatchData` which holds the `FusionMessage`
+    /// - Parameter data: the `Data` which holds the `FusionMessage`
     /// - Returns: a collection of `FusionMessage`s and `Error`
-    internal func parse(data: DispatchData) throws -> [FusionMessage] {
+    internal func parse(data: Data) async throws -> [FusionMessage] {
         var messages: [FusionMessage] = []; buffer.append(data); guard var length = buffer.extractLength() else { return .init() }
         guard buffer.count <= FusionConstants.frame.rawValue else { throw FusionFramerError.readBufferOverflow }
         guard buffer.count >= FusionConstants.header.rawValue, buffer.count >= length else { return .init() }
