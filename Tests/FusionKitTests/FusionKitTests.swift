@@ -5,148 +5,73 @@
 //  Created by Vinzenz Weist on 07.06.21.
 //  Copyright © 2021 Vinzenz Weist. All rights reserved.
 //
-/*
-import XCTest
+
+import Testing
+import Foundation
 @testable import FusionKit
 
-private enum TestCase {
-    case string
-    case data
-    case ping
-}
-
-class FusionKitTests: XCTestCase, @unchecked Sendable {
-    private var connection = try? FusionConnection(host: "localhost", port: 7878)
-    private var buffer = "50000"
-    private let timeout = 10.0
-    private let uuid = UUID().uuidString
-    private var exp = XCTestExpectation(description: "wait for test to finish...")
+@Suite("FusionKit Tests")
+struct FusionKitTests {
     
-    /// Set up
-    override func setUp() {
-        super.setUp()
-    }
-    
-    /// Start test sending single text message
-    func testTextMessage() {
-        start(test: .string)
-    }
-    
-    /// Start test sending single binary message
-    func testBinaryMessage() {
-        start(test: .data)
-    }
-    
-    /// Start test sending single ping message
-    func testPingMessage() {
-        start(test: .ping)
-    }
-    
-    /// Start test sending and cancel
-    func testCancel() {
-        start(test: .data, cancel: true)
-    }
-    
-    /// Start test creating and parsing string based message
-    func testParsingStringMessage() {
-        framer()
-    }
-    
-    /// Start test error description mapping
-    func testErrorDescription() {
-        XCTAssertEqual(FusionFramerError.parsingFailed.description, "message parsing failed")
-        XCTAssertEqual(FusionFramerError.readBufferOverflow.description, "read buffer overflow")
-        XCTAssertEqual(FusionFramerError.writeBufferOverflow.description, "write buffer overflow")
-        XCTAssertEqual(FusionFramerError.unexpectedOpcode.description, "unexpected opcode")
-        
-        do { _ = try FusionConnection(host: "", port: 7878) } catch {
-            guard let error = error as? FusionFramerError else { return }
-            XCTAssert(error.description == FusionConnectionError.missingHost.description)
+    @Test("Send String")
+    func sendString() async throws {
+        let connection = try FusionConnection(host: "de0.weist.org", port: 7878)
+        await connection.start()
+        try await connection.send(message: "500")
+        try await connection.receive { message, bytes in
+            var reference: Int = .zero
+            if let message = message as? Data { reference = message.count }
+            print("MESSAGE: \(message)")
+            #expect(reference == 10000)
+            await connection.cancel()
         }
-        do { _ = try FusionConnection(host: "de0.weist.org", port: 0) } catch {
-            guard let error = error as? FusionFramerError else { return }
-            XCTAssert(error.description == FusionConnectionError.missingPort.description)
+    }
+    
+    @Test("Send Data")
+    func sendData() async throws {
+        let connection = try FusionConnection(host: "de0.weist.org", port: 7878)
+        await connection.start()
+        try await connection.send(message: Data(count: 10000))
+        try await connection.receive { message, bytes in
+            var reference: String = .init()
+            if let message = message as? String {
+                reference = message
+                //#expect(reference == "10000")
+                print("MESSAGE: \(message)")
+            }
+            await connection.cancel()
+        }
+        try await Task.sleep(for: .seconds(1000))
+    }
+    /*
+    @Test("Multi Message")
+    func sendMultiple() async throws {
+        let connection = try FKConnection(host: "localhost", port: 7878)
+        try await connection.start()
+        try await connection.send(message: "1000000")
+        try await connection.receive { messages in
+            if let _ = messages as? Data { try await connection.send(message: "1000000") }
+        }
+    }
+    */
+    
+    @Test("Parse Message")
+    func parseMessage() async throws {
+        let framer = FusionFramer(); var count: Int = .zero
+        var message = try await framer.create(message: "FluxCapacitor!")
+
+        var buffer = Data()
+        for length in stride(from: Int(message[4]), through: 6, by: -1) {
+            var copy = message; copy[4] = UInt8(length); buffer.append(copy)
+            if copy.count > .zero { message.removeLast(); }
+            count += 1
         }
         
-        exp.fulfill()
-        wait(for: [exp], timeout: timeout)
+        var parsed: [String] = []
+        let messages = try await framer.parse(data: buffer)
+        for message in messages {
+            if let message = message as? String { parsed.append(message) }
+        }
+        #expect(count == parsed.count)
     }
 }
-
-// MARK: - Private API Extension -
-
-private extension FusionKitTests {
-    /// Create a connection and start
-    /// - Parameter test: test case
-    private func start(test: TestCase, cancel: Bool = false) {
-        guard let connection else { return }
-        stateUpdateHandler(connection: connection, test: test)
-        connection.receive { [weak self] message, bytes in
-            guard let self else { return }
-            if cancel { connection.cancel() }
-            if let message { assertion(message: message) }
-        }
-        connection.start()
-        wait(for: [exp], timeout: timeout)
-    }
-    
-    /// Run framer
-    private func framer() {
-        do {
-            let framer = FusionFramer()
-            let messageString = try framer.create(message: "Hello World! ⭐️")
-            let messageData = try framer.create(message: Data(count: 8192))
-            let messagePing = try framer.create(message: UInt16.max)
-            
-            let data = messageString + messageData + messagePing
-            let dispatch = data.withUnsafeBytes { DispatchData(bytes: $0) }
-            
-            var parsed: [Bool] = [false, false, false]
-            
-            for message in try framer.parse(data: dispatch) {
-                if case let message as String = message { print("String: \(message)"); parsed[0] = true }
-                if case let message as Data = message { print("Data: \(message.count)"); parsed[1] = true }
-                if case let message as UInt16 = message { print("UInt16: \(message)"); parsed[2] = true }
-            }
-            
-            XCTAssertEqual(parsed, [true, true, true]); exp.fulfill()
-        } catch {
-            XCTFail("failed with error: \(error)")
-        }
-        wait(for: [exp], timeout: timeout)
-    }
-    
-    /// Handles test routes for messages
-    /// - Parameter message: generic `FusionMessage`
-    private func assertion(message: FusionMessage) {
-        guard let connection else { return }
-        if case let message as UInt16 = message {
-            XCTAssertEqual(message, UInt16(buffer))
-            connection.cancel(); exp.fulfill()
-        }
-        if case let message as Data = message {
-            XCTAssertEqual(message.count, Int(buffer))
-            connection.cancel(); exp.fulfill()
-        }
-        if case let message as String = message {
-            XCTAssertEqual(message, buffer)
-            connection.cancel(); exp.fulfill()
-        }
-    }
-    
-    /// State update handler for connection
-    /// - Parameter connection: instance of 'NetworkConnection'
-    private func stateUpdateHandler(connection: FusionConnection, test: TestCase) {
-        connection.stateUpdateHandler = { [weak self] state in
-            guard let self else { return }
-            if case .ready = state {
-                if test == .string { connection.send(message: buffer) }
-                if test == .data { connection.send(message: Data(count: Int(buffer)!)) }
-                if test == .ping { connection.send(message: UInt16(buffer)!) }
-            }
-            if case .cancelled = state { exp.fulfill() }
-            if case let .failed(error) = state { guard let error else { return }; XCTFail("failed with error: \(error)") }
-        }
-    }
-}
-*/

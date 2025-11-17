@@ -25,6 +25,7 @@ internal final actor FusionFramer: FusionFramerProtocol, Sendable {
     internal func create<T: FusionMessage>(message: T) async throws -> Data {
         let total = message.raw.count + FusionConstants.header.rawValue
         guard total <= FusionConstants.frame.rawValue else { throw FusionFramerError.writeBufferOverflow }
+        
         var frame = Data()
         frame.append(message.opcode)
         frame.append(UInt32(message.raw.count + FusionConstants.header.rawValue).endian)

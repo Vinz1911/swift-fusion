@@ -9,11 +9,12 @@
 import Foundation
 import Network
 
-public final actor FusionConnection: Sendable {
+public actor FusionConnection: FusionConnectionProtocol, Sendable {
+    private var bytes: @Sendable (FusionBytes) async throws -> Void = { _ in }
     private let framer = FusionFramer()
-    private var bytes = FusionBytes()
     private var endpoint: NWEndpoint
     private var connection: NetworkConnection<TCP>?
+    private var task: Task<Void, Error>?
     
     /// The `FusionConnection` is a custom network connector that implements the **Fusion Framing Protocol (FFP)**.
     /// It is built on top of the standard `Network` framework library. This fast and lightweight custom framing protocol
@@ -47,7 +48,7 @@ public final actor FusionConnection: Sendable {
     
     /// Send messages to a connected host
     ///
-    /// - Parameter message: generic type send `String`, `Data` and `UInt16` based messages
+    /// - Parameter message: generic type takes `String`, `Data` and `UInt16` based messages
     public func send<T: FusionMessage>(message: T) async throws -> Void {
         try await processing(with: message)
     }
@@ -55,42 +56,42 @@ public final actor FusionConnection: Sendable {
     /// Receive a message from a connected host
     ///
     /// - Parameter completion: contains `FusionMessage` and `FusionBytes` generic message typ
-    public func receive(_ completion: @Sendable @escaping (FusionMessage?, FusionBytes?) async throws -> Void) async throws -> Task<Void, Error> {
-        try await processing { [weak self] message in
-            guard let self else { return }
-            try await completion(message, self.bytes)
-        }
+    public func receive(_ completion: @Sendable @escaping (FusionMessage?, FusionBytes?) async throws -> Void) async throws -> Void {
+        bytes = { try await completion(nil, $0) }
+        try await processing { try await completion($0, nil) }
     }
 }
 
 // MARK: - Private API -
 
 private extension FusionConnection {
+    
     /// Process message data and send it to a host
     ///
-    /// - Parameter data: message data
+    /// - Parameter message: generic type takes `FusionMessage`
     private func processing<T: FusionMessage>(with message: T) async throws -> Void {
         guard let connection else { throw FusionConnectionError.deadConnection }
         let frame = try await framer.create(message: message)
         for chunk in frame.chunks {
-            self.bytes.outbound = chunk.count
+            try await bytes(.init(outbound: chunk.count))
             try await connection.send(chunk)
         }
     }
     
     /// Process message data and parse it into a conform message
     ///
-    /// - Parameter data: message data
-    private func processing(_ completion: (@Sendable (FusionMessage) async throws -> Void)? = nil) async throws -> Task<Void, Error> {
+    /// - Parameter completion: async completion block contains `FusionMessage`
+    private func processing(_ completion: (@Sendable (FusionMessage) async throws -> Void)? = nil) async throws -> Void {
         guard let connection else { throw FusionConnectionError.deadConnection }
-        return Task(priority: .high) { [weak self] in
+        self.task = Task(priority: .high) { [weak self] in
             while !Task.isCancelled {
                 guard let self else { return }
                 let data = try await connection.receive(atLeast: Int.minimum, atMost: Int.maximum).content
-                // self.bytes.inbound = data.count
+                try await bytes(.init(inbound: data.count))
                 let messages = try await self.framer.parse(data: data)
                 for message in messages { if let completion { try await completion(message) } }
             }
         }
+        //if let task { try await task.value }
     }
 }
