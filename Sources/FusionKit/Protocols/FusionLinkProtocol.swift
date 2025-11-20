@@ -1,5 +1,5 @@
 //
-//  FusionConnectionProtocol.swift
+//  FusionLinkProtocol.swift
 //  FusionKit
 //
 //  Created by Vinzenz Weist on 07.06.21.
@@ -9,11 +9,11 @@
 import Foundation
 import Network
 
-public protocol FusionConnectionProtocol: Sendable {
+public protocol FusionLinkProtocol: Sendable {
     /// The `FusionState` update values
-    var stateUpdateHandler: (@Sendable (FusionState) -> Void) { get set }
+    var onStateUpdate: (@Sendable (FusionState) -> Void) { get set }
     
-    /// The `FusionConnection` is a custom network connector that implements the **Fusion Framing Protocol (FFP)**.
+    /// The `FusionLink` is a custom network connector that implements the **Fusion Framing Protocol (FFP)**.
     /// It is built on top of the standard `Network` framework library. This fast and lightweight custom framing protocol
     /// enables high-speed data transmission and provides fine-grained control over network flow.
     ///
@@ -24,23 +24,23 @@ public protocol FusionConnectionProtocol: Sendable {
     ///   - qos: quality of service class `DispatchQoS`
     init(host: String, port: UInt16, parameters: NWParameters, qos: DispatchQoS) throws
     
-    /// Start a connection
+    /// Start to establish a new link
     ///
-    /// - Returns: non returning
+    /// Establish a new `FusionLink` to a compatible booststrap
     func start() -> Void
     
-    /// Cancel the current connection
+    /// Cancel an active link
     ///
-    /// - Returns: non returning
+    /// The current active `FusionLink` will be terminated
     func cancel() -> Void
     
-    /// Send messages to a connected host
+    /// Send a `FusionMessage` to a linked bootstraped
     ///
-    /// - Parameter message: generic type send `String`, `Data` and `UInt16` based messages
+    /// - Parameter message: generic type which conforms to `FusionMessage`
     func send<T: FusionMessage>(message: T) -> Void
     
-    /// Receive a message from a connected host
-    /// 
-    /// - Parameter completion: contains `FusionMessage` and `FusionBytes` generic message typ
-    func receive(_ completion: @Sendable @escaping (FusionMessage?, FusionBytes?) -> Void) -> Void
+    /// Receive a message from a linked bootstraped
+    ///
+    /// - Parameter completion: contains `FusionMessage` and `FusionReport` generic message typ
+    func receive(_ completion: @Sendable @escaping (FusionMessage?, FusionReport?) -> Void) -> Void
 }

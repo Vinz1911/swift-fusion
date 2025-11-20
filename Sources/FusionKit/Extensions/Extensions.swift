@@ -24,6 +24,13 @@ internal extension UInt32 {
     var endian: Data { withUnsafeBytes(of: self.bigEndian) { Data($0) } }
 }
 
+// MARK: - Double -
+
+internal extension Double {
+    /// Timeout time
+    static var timeout: Self { 3.0 }
+}
+
 // MARK: - Data -
 
 internal extension Data {

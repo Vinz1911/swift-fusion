@@ -10,16 +10,18 @@ import Foundation
 
 // MARK: - Fusion Connection Error -
 
-/// The `FusionConnectionError` specific errors
+/// The `FusionLinkError` specific errors
 @frozen
-public enum FusionConnectionError: Error, Sendable {
-    case missingHost
-    case missingPort
+public enum FusionLinkError: Error, Sendable {
+    case invalidHostName
+    case invalidPortNumber
+    case linkTimeout
     
     public var description: String {
         switch self {
-        case .missingHost: return "missing host"
-        case .missingPort: return "missing port" }
+        case .invalidHostName: return "host name is invalid, failed to create instance"
+        case .invalidPortNumber: return "port number is invalid, failed to create instance"
+        case .linkTimeout: return "link run into timeout, failed to establish connection" }
     }
 }
 
@@ -35,9 +37,9 @@ public enum FusionFramerError: Error, Sendable {
     
     public var description: String {
         switch self {
-        case .parsingFailed: return "message parsing failed"
-        case .readBufferOverflow: return "read buffer overflow"
-        case .writeBufferOverflow: return "write buffer overflow"
-        case .unexpectedOpcode: return "unexpected opcode" }
+        case .parsingFailed: return "unable to parse message frame"
+        case .readBufferOverflow: return "invalid frame size, read buffer overflow"
+        case .writeBufferOverflow: return "invalid frame size, write buffer overflow"
+        case .unexpectedOpcode: return "unexpected opcode, terminating" }
     }
 }

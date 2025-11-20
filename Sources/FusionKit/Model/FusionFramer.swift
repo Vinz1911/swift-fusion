@@ -25,6 +25,7 @@ internal final class FusionFramer: FusionFramerProtocol, @unchecked Sendable {
     internal func create<T: FusionMessage>(message: T) throws -> Data {
         let total = message.raw.count + FusionConstants.header.rawValue
         guard total <= FusionConstants.frame.rawValue else { throw FusionFramerError.writeBufferOverflow }
+        
         var frame = Data()
         frame.append(message.opcode)
         frame.append(UInt32(message.raw.count + FusionConstants.header.rawValue).endian)
@@ -52,7 +53,6 @@ internal final class FusionFramer: FusionFramerProtocol, @unchecked Sendable {
             
             if buffer.count >= length { buffer = buffer.subdata(in: .init(length)..<buffer.count) };
             if let extracted = buffer.extractLength() { length = extracted }
-        }
-        return messages
+        }; return messages
     }
 }

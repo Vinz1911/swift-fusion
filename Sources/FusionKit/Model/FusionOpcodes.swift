@@ -8,6 +8,8 @@
 
 import Foundation
 
+// MARK: - Message Flow Control -
+
 /// The `FusionOpcodes` for the frame header
 internal enum FusionOpcodes: UInt8, Sendable {
     case none   = 0x0

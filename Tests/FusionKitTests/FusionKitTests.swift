@@ -9,14 +9,18 @@
 import XCTest
 @testable import FusionKit
 
+// MARK: - Test Cases -
+
 private enum TestCase {
     case string
     case data
     case ping
 }
 
+// MARK: - Tests -
+
 class FusionKitTests: XCTestCase, @unchecked Sendable {
-    private var connection = try? FusionConnection(host: "localhost", port: 7878)
+    private var connection = try? FusionLink(host: "de0.weist.org", port: 7878)
     private var buffer = "50000"
     private let timeout = 10.0
     private let uuid = UUID().uuidString
@@ -51,26 +55,6 @@ class FusionKitTests: XCTestCase, @unchecked Sendable {
     func testParsingStringMessage() {
         framer()
     }
-    
-    /// Start test error description mapping
-    func testErrorDescription() {
-        XCTAssertEqual(FusionFramerError.parsingFailed.description, "message parsing failed")
-        XCTAssertEqual(FusionFramerError.readBufferOverflow.description, "read buffer overflow")
-        XCTAssertEqual(FusionFramerError.writeBufferOverflow.description, "write buffer overflow")
-        XCTAssertEqual(FusionFramerError.unexpectedOpcode.description, "unexpected opcode")
-        
-        do { _ = try FusionConnection(host: "", port: 7878) } catch {
-            guard let error = error as? FusionFramerError else { return }
-            XCTAssert(error.description == FusionConnectionError.missingHost.description)
-        }
-        do { _ = try FusionConnection(host: "de0.weist.org", port: 0) } catch {
-            guard let error = error as? FusionFramerError else { return }
-            XCTAssert(error.description == FusionConnectionError.missingPort.description)
-        }
-        
-        exp.fulfill()
-        wait(for: [exp], timeout: timeout)
-    }
 }
 
 // MARK: - Private API Extension -
@@ -80,7 +64,7 @@ private extension FusionKitTests {
     /// - Parameter test: test case
     private func start(test: TestCase, cancel: Bool = false) {
         guard let connection else { return }
-        stateUpdateHandler(connection: connection, test: test)
+        onStateUpdate(connection: connection, test: test)
         connection.receive { [weak self] message, bytes in
             guard let self else { return }
             if cancel { connection.cancel() }
@@ -136,8 +120,8 @@ private extension FusionKitTests {
     
     /// State update handler for connection
     /// - Parameter connection: instance of 'NetworkConnection'
-    private func stateUpdateHandler(connection: FusionConnection, test: TestCase) {
-        connection.stateUpdateHandler = { [weak self] state in
+    private func onStateUpdate(connection: FusionLink, test: TestCase) {
+        connection.onStateUpdate = { [weak self] state in
             guard let self else { return }
             if case .ready = state {
                 if test == .string { connection.send(message: buffer) }

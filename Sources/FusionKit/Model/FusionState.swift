@@ -8,8 +8,10 @@
 
 import Foundation
 
-/// The `FusionBytes` for inbound and outbound bytes
-public struct FusionBytes: Sendable {
+// MARK: - RxTx Bytes -
+
+/// The `FusionReport` for inbound and outbound bytes
+public struct FusionReport: Sendable {
     public internal(set) var inbound: Int?
     public internal(set) var outbound: Int?
 }
@@ -27,5 +29,5 @@ public enum FusionState: Sendable {
 /// The `FusionResult` internal message transmitter
 internal enum FusionResult: Sendable {
     case message(FusionMessage)
-    case bytes(FusionBytes)
+    case bytes(FusionReport)
 }

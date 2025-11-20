@@ -13,7 +13,7 @@ internal protocol FusionFramerProtocol: Sendable {
     ///
     /// The `FusionFramer` implements the **Fusion Framing Protocol (FFP)** —
     /// a fast and lightweight message framing protocol that supports both
-    /// `ByteBuffer`- and `String`-based messages.
+    /// `Data`- and `String`-based messages.
     ///
     /// It also provides support for `UInt16`, allowing the creation of data frames
     /// with a defined size, which can be used for round-trip time (RTT) measurements.
