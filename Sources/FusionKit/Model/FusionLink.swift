@@ -16,7 +16,7 @@ public final class FusionLink: FusionLinkProtocol, @unchecked Sendable {
     private var timer: DispatchSourceTimer?
     private let queue: DispatchQueue
     private let framer = FusionFramer()
-    private let connection: NWConnection
+    private let link: NWConnection
     
     /// The `FusionLink` is a custom network connector that implements the **Fusion Framing Protocol (FFP)**.
     /// It is built on top of the standard `Network` framework library. This fast and lightweight custom framing protocol
@@ -29,7 +29,7 @@ public final class FusionLink: FusionLinkProtocol, @unchecked Sendable {
     ///   - qos: quality of service class `DispatchQoS`
     public required init(host: String, port: UInt16, parameters: NWParameters = .tcp, qos: DispatchQoS = .userInteractive) throws {
         if host.isEmpty { throw(FusionLinkError.invalidHostName) }; if port == .zero { throw(FusionLinkError.invalidPortNumber) }
-        self.connection = NWConnection(host: NWEndpoint.Host(host), port: NWEndpoint.Port(integerLiteral: port), using: parameters)
+        self.link = NWConnection(host: NWEndpoint.Host(host), port: NWEndpoint.Port(integerLiteral: port), using: parameters)
         self.queue = DispatchQueue(label: UUID().uuidString, qos: qos)
     }
     
@@ -38,10 +38,10 @@ public final class FusionLink: FusionLinkProtocol, @unchecked Sendable {
     /// Establish a new `FusionLink` to a compatible booststrap
     public func start() -> Void {
         queue.async { [weak self] in guard let self else { return }
-            handler(); discontiguous(); connection.start(queue: queue)
+            handler(); discontiguous(); link.start(queue: queue)
         }
         queue.asyncAfter(deadline: .now() + .timeout) { [weak self] in guard let self else { return }
-            guard connection.state != .ready else { return }
+            guard link.state != .ready else { return }
             teardown(); onStateUpdate(.failed(FusionLinkError.linkTimeout))
         }
     }
@@ -82,14 +82,14 @@ private extension FusionLink {
     ///
     /// The current active `FusionLink` will be terminated cleaned
     private func teardown() -> Void {
-        connection.cancel(); framer.reset()
+        link.cancel(); framer.reset()
     }
     
     /// Link handler for state updates
     ///
     /// Manages state updates for the active established link
     private func handler() -> Void {
-        connection.stateUpdateHandler = { [weak self] state in
+        link.stateUpdateHandler = { [weak self] state in
             guard let self else { return }
             if case .ready = state { onStateUpdate(.ready) }
             if case .cancelled = state { onStateUpdate(.cancelled) }
@@ -125,8 +125,8 @@ private extension FusionLink {
     ///
     /// - Parameter content: the content `Data` to transmit
     private func dispatch(_ content: Data) -> Void {
-        connection.batch {
-            connection.send(content: content, completion: .contentProcessed { [weak self] error in
+        link.batch {
+            link.send(content: content, completion: .contentProcessed { [weak self] error in
                 guard let self else { return }
                 result(.bytes(FusionReport(outbound: content.count)))
                 if let error, error != NWError.posix(.ECANCELED) { onStateUpdate(.failed(error)) }
@@ -138,8 +138,8 @@ private extension FusionLink {
     ///
     /// The `DispatchData` received from a current established `FusionLink`
     private func discontiguous() -> Void {
-        connection.batch {
-            connection.receiveDiscontiguous(minimumIncompleteLength: .minimum, maximumLength: .maximum) { [weak self] content, _, isComplete, error in
+        link.batch {
+            link.receiveDiscontiguous(minimumIncompleteLength: .minimum, maximumLength: .maximum) { [weak self] content, _, isComplete, error in
                 guard let self else { return }
                 if let error { if error != NWError.posix(.ECANCELED) { onStateUpdate(.failed(error)); teardown(); }; return }
                 if let content { result(.bytes(.init(inbound: content.count))); processing(from: content) }

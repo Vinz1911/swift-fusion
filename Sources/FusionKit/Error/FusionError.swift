@@ -8,7 +8,7 @@
 
 import Foundation
 
-// MARK: - Fusion Connection Error -
+// MARK: - Fusion Link Error -
 
 /// The `FusionLinkError` specific errors
 @frozen
@@ -21,7 +21,7 @@ public enum FusionLinkError: Error, Sendable {
         switch self {
         case .invalidHostName: return "host name is invalid, failed to create instance"
         case .invalidPortNumber: return "port number is invalid, failed to create instance"
-        case .linkTimeout: return "link run into timeout, failed to establish connection" }
+        case .linkTimeout: return "link run into timeout, failed to establish link" }
     }
 }
 
