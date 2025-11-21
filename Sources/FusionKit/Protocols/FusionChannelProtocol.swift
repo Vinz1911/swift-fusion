@@ -10,9 +10,6 @@ import Foundation
 import Network
 
 public protocol FusionChannelProtocol: Sendable {
-    /// The `FusionState` update values
-    var onStateUpdate: (@Sendable (FusionState) -> Void) { get set }
-    
     /// The `FusionChannel` is a custom network connector that implements the **Fusion Framing Protocol (FFP)**.
     /// It is built on top of the standard `Network` framework library. This fast and lightweight custom framing protocol
     /// enables high-speed data transmission and provides fine-grained control over network flow.
@@ -41,6 +38,6 @@ public protocol FusionChannelProtocol: Sendable {
     
     /// Receive a message from a connected bootstraped
     ///
-    /// - Parameter completion: contains `FusionMessage` and `FusionReport` generic message typ
-    func receive(_ completion: @Sendable @escaping (FusionMessage?, FusionReport?) -> Void) -> Void
+    /// - Parameter completion: contains `FusionMessage`, `FusionReport` and `FusionState` generic message typ
+    func receive(_ completion: @Sendable @escaping (FusionMessage?, FusionReport?, FusionState?) -> Void) -> Void
 }

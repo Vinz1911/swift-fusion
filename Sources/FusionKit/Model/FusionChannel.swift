@@ -10,8 +10,6 @@ import Foundation
 import Network
 
 public final class FusionChannel: FusionChannelProtocol, @unchecked Sendable {
-    public var onStateUpdate: (@Sendable (FusionState) -> Void) = { _ in }
-    
     private var result: (@Sendable (FusionResult) -> Void) = { _ in }
     private var timer: DispatchSourceTimer?
     private let queue: DispatchQueue
@@ -42,7 +40,7 @@ public final class FusionChannel: FusionChannelProtocol, @unchecked Sendable {
         }
         queue.asyncAfter(deadline: .now() + .timeout) { [weak self] in
             guard self?.channel.state != .ready else { return }
-            self?.teardown(); self?.onStateUpdate(.failed(FusionChannelError.channelTimeout))
+            self?.teardown(); self?.result(.state(.failed(FusionChannelError.channelTimeout)))
         }
     }
     
@@ -66,11 +64,12 @@ public final class FusionChannel: FusionChannelProtocol, @unchecked Sendable {
     
     /// Receive a message from a connected bootstraped
     ///
-    /// - Parameter completion: contains `FusionMessage` and `FusionReport` generic message typ
-    public func receive(_ completion: @Sendable @escaping (FusionMessage?, FusionReport?) -> Void) -> Void {
+    /// - Parameter completion: contains `FusionMessage`, `FusionReport` and `FusionState` generic message typ
+    public func receive(_ completion: @Sendable @escaping (FusionMessage?, FusionReport?, FusionState?) -> Void) -> Void {
         result = { result in
-            if case .message(let message) = result { completion(message, nil) }
-            if case .bytes(let bytes) = result { completion(nil, bytes) }
+            if case .message(let message) = result { completion(message, nil, nil) }
+            if case .report(let bytes) = result { completion(nil, bytes, nil) }
+            if case .state(let state) = result { completion(nil, nil, state) }
         }
     }
 }
@@ -90,9 +89,9 @@ private extension FusionChannel {
     /// Manages state updates for the active established channel
     private func handler() -> Void {
         channel.stateUpdateHandler = { [weak self] state in
-            if case .ready = state { self?.onStateUpdate(.ready) }
-            if case .cancelled = state { self?.onStateUpdate(.cancelled) }
-            if case .failed(let error) = state { self?.teardown(); self?.onStateUpdate(.failed(error)) }
+            if case .ready = state { self?.result(.state(.ready)) }
+            if case .cancelled = state { self?.result(.state(.cancelled))  }
+            if case .failed(let error) = state { self?.teardown(); self?.result(.state(.failed(error))) }
         }
     }
     
@@ -104,7 +103,7 @@ private extension FusionChannel {
             let frame = try framer.create(message: message)
             for chunk in frame.chunks { dispatch(chunk) }
         } catch {
-            onStateUpdate(.failed(error)); teardown()
+            result(.state(.failed(error))); teardown()
         }
     }
     
@@ -116,7 +115,7 @@ private extension FusionChannel {
             let messages = try framer.parse(data: data)
             for message in messages { result(.message(message)) }
         } catch {
-            onStateUpdate(.failed(error)); teardown()
+            result(.state(.failed(error))); teardown()
         }
     }
     
@@ -126,8 +125,8 @@ private extension FusionChannel {
     private func dispatch(_ content: Data) -> Void {
         channel.batch {
             channel.send(content: content, completion: .contentProcessed { [weak self] error in
-                self?.result(.bytes(FusionReport(outbound: content.count)))
-                if let error, error != NWError.posix(.ECANCELED) { self?.onStateUpdate(.failed(error)) }
+                self?.result(.report(FusionReport(outbound: content.count)))
+                if let error, error != NWError.posix(.ECANCELED) { self?.result(.state(.failed(error))) }
             })
         }
     }
@@ -138,8 +137,8 @@ private extension FusionChannel {
     private func discontiguous() -> Void {
         channel.batch {
             channel.receiveDiscontiguous(minimumIncompleteLength: .minimum, maximumLength: .maximum) { [weak self] content, _, isComplete, error in
-                if let error { if error != NWError.posix(.ECANCELED) { self?.onStateUpdate(.failed(error)); self?.teardown(); }; return }
-                if let content { self?.result(.bytes(.init(inbound: content.count))); self?.processing(from: content) }
+                if let error { if error != NWError.posix(.ECANCELED) { self?.result(.state(.failed(error))); self?.teardown(); }; return }
+                if let content { self?.result(.report(.init(inbound: content.count))); self?.processing(from: content) }
                 if isComplete { self?.teardown() } else { self?.discontiguous() }
             }
         }

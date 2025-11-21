@@ -65,10 +65,10 @@ private extension FusionKitTests {
     /// - Parameter test: test case
     private func start(test: TestCase, cancel: Bool = false) {
         guard let channel else { return }
-        onStateUpdate(channel: channel, test: test)
-        channel.receive { [weak self] message, bytes in
+        channel.receive { [weak self] message, bytes, state in
             if cancel { channel.cancel() }
             if let message { self?.assertion(message: message) }
+            if let state { self?.onStateUpdate(state: state, channel: channel, test: test) }
         }
         channel.start()
         wait(for: [exp], timeout: timeout)
@@ -123,17 +123,16 @@ private extension FusionKitTests {
     
     /// State update handler for channel
     ///
-    /// - Parameter channel: instance of `FusionChannel`
-    private func onStateUpdate(channel: FusionChannel, test: TestCase) {
-        channel.onStateUpdate = { [weak self] state in
-            guard let self else { return }
-            if case .ready = state {
-                if test == .string { channel.send(message: buffer) }
-                if test == .data { channel.send(message: Data(count: Int(buffer)!)) }
-                if test == .ping { channel.send(message: UInt16(buffer)!) }
-            }
-            if case .cancelled = state { exp.fulfill() }
-            if case let .failed(error) = state { guard let error else { return }; XCTFail("failed with error: \(error)") }
+    /// - Parameters:
+    ///   - state: state changes from `FusionState`
+    ///   - channel: the current `FusionChannel`
+    private func onStateUpdate(state: FusionState, channel: FusionChannel, test: TestCase) {
+        if case .ready = state {
+            if test == .string { channel.send(message: buffer) }
+            if test == .data { channel.send(message: Data(count: Int(buffer)!)) }
+            if test == .ping { channel.send(message: UInt16(buffer)!) }
         }
+        if case .cancelled = state { exp.fulfill() }
+        if case let .failed(error) = state { guard let error else { return }; XCTFail("failed with error: \(error)") }
     }
 }
