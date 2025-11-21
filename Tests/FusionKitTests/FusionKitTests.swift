@@ -20,7 +20,7 @@ private enum TestCase {
 // MARK: - Tests -
 
 class FusionKitTests: XCTestCase, @unchecked Sendable {
-    private var link = try? FusionLink(host: "de0.weist.org", port: 7878)
+    private var channel = try? FusionChannel(host: "de0.weist.org", port: 7878)
     private var buffer = "50000"
     private let timeout = 10.0
     private let uuid = UUID().uuidString
@@ -60,17 +60,16 @@ class FusionKitTests: XCTestCase, @unchecked Sendable {
 // MARK: - Private API Extension -
 
 private extension FusionKitTests {
-    /// Create a link and start
+    /// Create a channel and start
     /// - Parameter test: test case
     private func start(test: TestCase, cancel: Bool = false) {
-        guard let link else { return }
-        onStateUpdate(link: link, test: test)
-        link.receive { [weak self] message, bytes in
-            guard let self else { return }
-            if cancel { link.cancel() }
-            if let message { assertion(message: message) }
+        guard let channel else { return }
+        onStateUpdate(channel: channel, test: test)
+        channel.receive { [weak self] message, bytes in
+            if cancel { channel.cancel() }
+            if let message { self?.assertion(message: message) }
         }
-        link.start()
+        channel.start()
         wait(for: [exp], timeout: timeout)
     }
     
@@ -103,30 +102,30 @@ private extension FusionKitTests {
     /// Handles test routes for messages
     /// - Parameter message: generic `FusionMessage`
     private func assertion(message: FusionMessage) {
-        guard let link else { return }
+        guard let channel else { return }
         if case let message as UInt16 = message {
             XCTAssertEqual(message, UInt16(buffer))
-            link.cancel(); exp.fulfill()
+            channel.cancel(); exp.fulfill()
         }
         if case let message as Data = message {
             XCTAssertEqual(message.count, Int(buffer))
-            link.cancel(); exp.fulfill()
+            channel.cancel(); exp.fulfill()
         }
         if case let message as String = message {
             XCTAssertEqual(message, buffer)
-            link.cancel(); exp.fulfill()
+            channel.cancel(); exp.fulfill()
         }
     }
     
-    /// State update handler for link
-    /// - Parameter link: instance of 'Networklink'
-    private func onStateUpdate(link: FusionLink, test: TestCase) {
-        link.onStateUpdate = { [weak self] state in
+    /// State update handler for channel
+    /// - Parameter channel: instance of 'Networklink'
+    private func onStateUpdate(channel: FusionChannel, test: TestCase) {
+        channel.onStateUpdate = { [weak self] state in
             guard let self else { return }
             if case .ready = state {
-                if test == .string { link.send(message: buffer) }
-                if test == .data { link.send(message: Data(count: Int(buffer)!)) }
-                if test == .ping { link.send(message: UInt16(buffer)!) }
+                if test == .string { channel.send(message: buffer) }
+                if test == .data { channel.send(message: Data(count: Int(buffer)!)) }
+                if test == .ping { channel.send(message: UInt16(buffer)!) }
             }
             if case .cancelled = state { exp.fulfill() }
             if case let .failed(error) = state { guard let error else { return }; XCTFail("failed with error: \(error)") }

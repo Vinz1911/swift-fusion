@@ -1,90 +1,172 @@
 # Fusion Framing Protocol (FFP)
 
+Category: Standards Track  
+Title: Fusion Framing Protocol (FFP)  
+Author: [Vinzenz Weist]  
+Status: Draft
+Date: November 2025  
+
+---
+
 ## Abstract
 
-This document specifies a new binary framing protocol, called Fusion Framing Protocol. The protocol provides a generic and efficient way to send text, binary, and control messages over a network connection. It is designed to be simple, flexible, and extensible. This protocol is suitable for use in various network applications, such as client-server and peer-to-peer communication.
+This document defines the **Fusion Framing Protocol (FFP)**, a compact and extensible binary framing mechanism for network message exchange. FFP provides a standardized method to encapsulate and transport text, binary, and control messages between peers. It is designed for simplicity, efficiency, and flexibility, making it suitable for use in both client–server and peer-to-peer applications.
+
+---
 
 ## Table of Contents
 
-1. Introduction
-2. Protocol Overview
-3. Framing
-   - 3.1 Frame Format
-   - 3.2 Frame Types
-   - 3.3 Control Frames
-4. Message Handling
-5. Security Considerations
-6. IANA Considerations
+1. Introduction  
+2. Terminology  
+3. Protocol Overview  
+4. Frame Structure  
+   - 4.1 Frame Format  
+   - 4.2 Frame Types  
+   - 4.3 Control Frames  
+5. Message Handling  
+6. Error Handling  
+7. Security Considerations  
+8. IANA Considerations  
+9. References  
+
+---
 
 ## 1. Introduction
 
-As network applications become more complex and diverse, there is a growing need for a simple and efficient way to send different types of messages over a network connection. The Fusion Framing Protocol (FFP) is designed to meet this need by providing a generic and extensible binary framing protocol. The protocol supports the transmission of text, binary, and control messages.
+The **Fusion Framing Protocol (FFP)** defines a binary message framing system intended to provide a reliable and efficient encapsulation mechanism over an established transport connection.  
+FFP supports the exchange of **UTF-8 text**, **arbitrary binary**, and **control** messages, making it applicable to a wide range of networking use cases.
 
-This document defines the framing format, frame types, and message handling procedures for the FFP. It also discusses security considerations and IANA considerations related to the protocol.
+This specification defines the frame layout, frame types, message semantics, and security considerations necessary for correct implementation.
 
-## 2. Protocol Overview
+FFP is transport-agnostic; it can operate over any reliable, ordered byte stream transport such as TCP or TLS.
 
-The FFP is a binary framing protocol that uses a simple header and payload structure. The header contains an opcode that indicates the type of the frame and the length of the frame. The payload contains the actual message data.
+---
 
-The protocol supports three types of frames:
+## 2. Terminology
 
-- Text frames, for transmitting UTF-8 encoded text messages
-- Binary frames, for transmitting arbitrary binary data
-- Control frames, for transmitting control messages, such as pings
+The key words **MUST**, **MUST NOT**, **REQUIRED**, **SHALL**, **SHALL NOT**, **SHOULD**, **SHOULD NOT**, **RECOMMENDED**, **MAY**, and **OPTIONAL** in this document are to be interpreted as described in [RFC 2119].
 
-## 3. Framing
+---
 
-### 3.1 Frame Format
-Each frame in the FFP consists of a header and a payload. Frames in the Fusion Framing Protocol have the following structure:
+## 3. Protocol Overview
 
-```shell
- 0                   1
- 0 1 2 3 4 5 6 7 8 9 0 1 2 ... n
-+-+-------+---------------------+
-|O|  Len  |    Payload Data     |
-|P|  (4)  |         (n)         |
-|C|       |                     |
-+---------+ - - - - - - - - - - +
-:    Payload Data continued ... :
-+ - - - - - - - - - - - - - - - +
-|    Payload Data continued ... |
-+-------------------------------+
+FFP operates by segmenting application data into discrete **frames**, each consisting of a **header** and an associated **payload**.  
+The header specifies the frame’s **type** and **length**, allowing endpoints to interpret the data appropriately.
 
-The header contains the following fields:
+Three primary frame types are defined:
 
-- Opcode (1 byte): Indicates the type of the frame (text, binary, or control)
-- Length (4 bytes): Specifies the total length of the frame, including the header and payload, in network byte order (big-endian)
+1. **Text Frames (opcode 0x1):** carry UTF-8 encoded textual data.  
+2. **Binary Frames (opcode 0x2):** carry opaque binary data.  
+3. **Control Frames (opcode 0x3):** carry protocol-level signaling information.
 
-The payload contains the actual message data, which can be text, binary, or control data, depending on the frame type.
+Control frames enable connection management, such as ping/pong keep-alive signaling or flow control.
 
-### 3.2 Frame Types
-The FFP supports three types of frames, as indicated by the opcode field in the header:
+---
 
-- Text frames (opcode 0x1): These frames carry UTF-8 encoded text messages. The payload contains the text data.
-- Binary frames (opcode 0x2): These frames carry arbitrary binary data. The payload contains the binary data.
-- Control frames (opcode 0x3): These frames carry control messages, such as pings. The payload contains the control data, which is a 16-bit unsigned integer.
+## 4. Frame Structure
 
-### 3.3 Control Frames
-Control frames are used to transmit control messages between endpoints. Currently, the only control message supported by the FFP is the ping message, which can be used to check the liveliness of a connection or measure latency.
+### 4.1 Frame Format
 
-A ping message is a control frame with a payload consisting of a 16-bit unsigned integer, which represents the size of the data being sent in the ping. The receiver of a ping message should respond with a pong message, which is also a control frame with the same payload as the ping message. This allows the sender to calculate the round-trip time for the ping message.
+Each frame consists of a fixed-length header followed by a variable-length payload.
 
-## 4. Message Handling
+ Protocol Structure
++--------+---------+-------------+
+| 0      | 1 2 3 4 | 5 6 7 8 9 N |
++--------+---------+-------------+
+| Opcode | Length  |   Payload   |
+| [0x1]  | [0x4]   |   [...]     |
+|        |         |             |
++--------+---------+- - - - - - -+
 
-When receiving a frame, an endpoint should verify the frame's type and length and then process the payload accordingly:
+**Fields:**
 
-- For text frames, decode the UTF-8 encoded payload as a text message and pass it to the application layer.
-- For binary frames, pass the binary payload to the application layer.
-- For control frames, process the control message according to its type (e.g., respond to a ping message with a pong message).
+- **Opcode (1 byte):**  
+  Identifies the frame type. Values are assigned as follows:
+  - `0x0`: Reserved Frame
+  - `0x1`: Text Frame  
+  - `0x2`: Binary Frame  
+  - `0x3`: Control Frame  
 
-When sending a message, an endpoint should create a frame with the appropriate opcode for the message type (text, binary, or control), set the length field in the header, append the message payload to the frame, and transmit the frame over the network connection.
+- **Length (4 bytes):**  
+  Specifies the total length of the frame, including both header and payload, expressed in network byte order (big-endian).
 
-## 5. Security Considerations
+- **Payload (variable):**  
+  The message content appropriate to the frame type.
 
-The FFP does not include any inherent mechanisms for ensuring data integrity, confidentiality, or authentication. To secure the communication between endpoints, the FFP should be used in conjunction with a secure transport layer, such as Transport Layer Security (TLS).
+---
 
-Additionally, the protocol does not provide any built-in mechanism for handling malicious or malformed frames. It is the responsibility of the application layer to handle such cases appropriately, for example, by closing the connection or implementing rate-limiting mechanisms.
+### 4.2 Frame Types
 
-## 6. IANA Considerations
+FFP defines the following frame types:
 
-There are no IANA considerations for the FFP at this time. Future extensions or revisions of the protocol may require IANA registration of new frame types, control messages, or other protocol elements.
+- **Text Frame (Opcode 0x1):**  
+  The payload contains UTF-8 encoded text data. Endpoints **MUST** validate UTF-8 encoding before processing.
+
+- **Binary Frame (Opcode 0x2):**  
+  The payload contains arbitrary binary data. The interpretation of the data is application-defined.
+
+- **Control Frame (Opcode 0x3):**  
+  The payload carries control information used by the protocol for management and signaling.
+
+---
+
+### 4.3 Control Frames
+
+Control frames are used for signaling and connection maintenance between endpoints.  
+At present, FFP defines one control message type:
+
+- **Ping (Type 0x3):**  
+  Used to measure latency or verify connection health. The payload is a up-to 16-bit unsigned integer indicating the ping sequence or payload size.
+
+Upon receipt of a **Ping** frame, the endpoint **MUST** respond with a **Pong** frame containing an identical payload. This allows the sender to compute round-trip time (RTT).
+
+Future control messages may be defined via IANA extension or protocol revisions.
+
+---
+
+## 5. Message Handling
+
+When a frame is received, the endpoint **MUST**:
+
+1. Validate the frame length against the declared `Length` field.  
+2. Identify the frame type via the `Opcode`.  
+3. Process the payload according to its type:
+   - **Text Frame:** Decode the payload as UTF-8 and pass the resulting text to the application layer.  
+   - **Binary Frame:** Forward the payload to the application layer as opaque data.  
+   - **Control Frame:** Execute the relevant control logic (e.g., respond to `Ping` with `Pong`).
+
+When sending data, the sender **MUST** construct a properly formatted frame by setting the `Opcode`, calculating the `Length`, and appending the payload.
+
+---
+
+## 6. Error Handling
+
+Endpoints **SHOULD** close the connection upon detecting malformed frames, invalid lengths, or unrecognized opcodes.  
+Implementations **MAY** implement rate limiting or timeout mechanisms to mitigate abuse or flooding.
+
+---
+
+## 7. Security Considerations
+
+FFP does not provide built-in encryption, authentication, or integrity verification.  
+For confidentiality and integrity, implementations **SHOULD** operate FFP over a secure transport such as **TLS**.
+
+Applications using FFP **MUST** validate all incoming data and handle malformed frames gracefully to prevent buffer overflows, denial-of-service attacks, or resource exhaustion.
+
+---
+
+## 8. IANA Considerations
+
+No IANA actions are required at this time.  
+Future versions of FFP may define registries for frame opcodes, control types, or protocol extensions.
+
+---
+
+## 9. References
+
+- [RFC 2119] Bradner, S., *Key words for use in RFCs to Indicate Requirement Levels*, BCP 14, RFC 2119, March 1997.  
+- [RFC 5246] Dierks, T., and Rescorla, E., *The Transport Layer Security (TLS) Protocol Version 1.2*, RFC 5246, August 2008.  
+
+---
+
+*End of Document*

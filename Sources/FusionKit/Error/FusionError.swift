@@ -8,11 +8,11 @@
 
 import Foundation
 
-// MARK: - Fusion Link Error -
+// MARK: - Fusion Channel Error -
 
-/// The `FusionLinkError` specific errors
+/// The `FusionChannelError` specific errors
 @frozen
-public enum FusionLinkError: Error, Sendable {
+public enum FusionChannelError: Error, Sendable {
     case invalidHostName
     case invalidPortNumber
     case linkTimeout
@@ -21,7 +21,7 @@ public enum FusionLinkError: Error, Sendable {
         switch self {
         case .invalidHostName: return "host name is invalid, failed to create instance"
         case .invalidPortNumber: return "port number is invalid, failed to create instance"
-        case .linkTimeout: return "link run into timeout, failed to establish link" }
+        case .linkTimeout: return "channel run into timeout, failed to establish channel" }
     }
 }
 

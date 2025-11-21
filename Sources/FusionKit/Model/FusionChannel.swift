@@ -1,5 +1,5 @@
 //
-//  FusionLink.swift
+//  FusionChannel.swift
 //  FusionKit
 //
 //  Created by Vinzenz Weist on 07.06.21.
@@ -9,16 +9,16 @@
 import Foundation
 import Network
 
-public final class FusionLink: FusionLinkProtocol, @unchecked Sendable {
+public final class FusionChannel: FusionChannelProtocol, @unchecked Sendable {
     public var onStateUpdate: (@Sendable (FusionState) -> Void) = { _ in }
     
     private var result: (@Sendable (FusionResult) -> Void) = { _ in }
     private var timer: DispatchSourceTimer?
     private let queue: DispatchQueue
     private let framer = FusionFramer()
-    private let link: NWConnection
+    private let channel: NWConnection
     
-    /// The `FusionLink` is a custom network connector that implements the **Fusion Framing Protocol (FFP)**.
+    /// The `FusionChannel` is a custom network connector that implements the **Fusion Framing Protocol (FFP)**.
     /// It is built on top of the standard `Network` framework library. This fast and lightweight custom framing protocol
     /// enables high-speed data transmission and provides fine-grained control over network flow.
     ///
@@ -28,30 +28,30 @@ public final class FusionLink: FusionLinkProtocol, @unchecked Sendable {
     ///   - parameters: network framework `NWParameters`
     ///   - qos: quality of service class `DispatchQoS`
     public required init(host: String, port: UInt16, parameters: NWParameters = .tcp, qos: DispatchQoS = .userInteractive) throws {
-        if host.isEmpty { throw(FusionLinkError.invalidHostName) }; if port == .zero { throw(FusionLinkError.invalidPortNumber) }
-        self.link = NWConnection(host: NWEndpoint.Host(host), port: NWEndpoint.Port(integerLiteral: port), using: parameters)
+        if host.isEmpty { throw(FusionChannelError.invalidHostName) }; if port == .zero { throw(FusionChannelError.invalidPortNumber) }
+        self.channel = NWConnection(host: NWEndpoint.Host(host), port: NWEndpoint.Port(integerLiteral: port), using: parameters)
         self.queue = DispatchQueue(label: UUID().uuidString, qos: qos)
     }
     
-    /// Start to establish a new link
+    /// Start to establish a new channel
     ///
-    /// Establish a new `FusionLink` to a compatible booststrap
+    /// Establish a new `FusionChannel` to a compatible booststrap
     public func start() -> Void {
         queue.async { [weak self] in guard let self else { return }
-            handler(); discontiguous(); link.start(queue: queue)
+            handler(); discontiguous(); channel.start(queue: queue)
         }
-        queue.asyncAfter(deadline: .now() + .timeout) { [weak self] in guard let self else { return }
-            guard link.state != .ready else { return }
-            teardown(); onStateUpdate(.failed(FusionLinkError.linkTimeout))
+        queue.asyncAfter(deadline: .now() + .timeout) { [weak self] in
+            guard self?.channel.state != .ready else { return }
+            self?.teardown(); self?.onStateUpdate(.failed(FusionChannelError.linkTimeout))
         }
     }
     
-    /// Cancel an active link
+    /// Cancel an active channel
     ///
-    /// The current active `FusionLink` will be terminated
+    /// The current active `FusionChannel` will be terminated
     public func cancel() -> Void {
-        queue.async { [weak self] in guard let self else { return }
-            teardown()
+        queue.async { [weak self] in
+            self?.teardown()
         }
     }
     
@@ -59,8 +59,8 @@ public final class FusionLink: FusionLinkProtocol, @unchecked Sendable {
     ///
     /// - Parameter message: generic type which conforms to `FusionMessage`
     public func send<T: FusionMessage>(message: T) -> Void {
-        queue.async { [weak self] in guard let self else { return }
-            processing(with: message)
+        queue.async { [weak self] in
+            self?.processing(with: message)
         }
     }
     
@@ -77,23 +77,22 @@ public final class FusionLink: FusionLinkProtocol, @unchecked Sendable {
 
 // MARK: - Private API -
 
-private extension FusionLink {
-    /// Clean and cancel `FusionLink`
+private extension FusionChannel {
+    /// Clean and cancel `FusionChannel`
     ///
-    /// The current active `FusionLink` will be terminated cleaned
+    /// The current active `FusionChannel` will be terminated cleaned
     private func teardown() -> Void {
-        link.cancel(); framer.reset()
+        channel.cancel(); framer.reset()
     }
     
-    /// Link handler for state updates
+    /// Channel handler for state updates
     ///
-    /// Manages state updates for the active established link
+    /// Manages state updates for the active established channel
     private func handler() -> Void {
-        link.stateUpdateHandler = { [weak self] state in
-            guard let self else { return }
-            if case .ready = state { onStateUpdate(.ready) }
-            if case .cancelled = state { onStateUpdate(.cancelled) }
-            if case .failed(let error) = state { teardown(); onStateUpdate(.failed(error)) }
+        channel.stateUpdateHandler = { [weak self] state in
+            if case .ready = state { self?.onStateUpdate(.ready) }
+            if case .cancelled = state { self?.onStateUpdate(.cancelled) }
+            if case .failed(let error) = state { self?.teardown(); self?.onStateUpdate(.failed(error)) }
         }
     }
     
@@ -125,25 +124,23 @@ private extension FusionLink {
     ///
     /// - Parameter content: the content `Data` to transmit
     private func dispatch(_ content: Data) -> Void {
-        link.batch {
-            link.send(content: content, completion: .contentProcessed { [weak self] error in
-                guard let self else { return }
-                result(.bytes(FusionReport(outbound: content.count)))
-                if let error, error != NWError.posix(.ECANCELED) { onStateUpdate(.failed(error)) }
+        channel.batch {
+            channel.send(content: content, completion: .contentProcessed { [weak self] error in
+                self?.result(.bytes(FusionReport(outbound: content.count)))
+                if let error, error != NWError.posix(.ECANCELED) { self?.onStateUpdate(.failed(error)) }
             })
         }
     }
     
     /// Receive discontiguous `TCP` data frames
     ///
-    /// The `DispatchData` received from a current established `FusionLink`
+    /// The `DispatchData` received from a current established `FusionChannel`
     private func discontiguous() -> Void {
-        link.batch {
-            link.receiveDiscontiguous(minimumIncompleteLength: .minimum, maximumLength: .maximum) { [weak self] content, _, isComplete, error in
-                guard let self else { return }
-                if let error { if error != NWError.posix(.ECANCELED) { onStateUpdate(.failed(error)); teardown(); }; return }
-                if let content { result(.bytes(.init(inbound: content.count))); processing(from: content) }
-                if isComplete { teardown() } else { discontiguous() }
+        channel.batch {
+            channel.receiveDiscontiguous(minimumIncompleteLength: .minimum, maximumLength: .maximum) { [weak self] content, _, isComplete, error in
+                if let error { if error != NWError.posix(.ECANCELED) { self?.onStateUpdate(.failed(error)); self?.teardown(); }; return }
+                if let content { self?.result(.bytes(.init(inbound: content.count))); self?.processing(from: content) }
+                if isComplete { self?.teardown() } else { self?.discontiguous() }
             }
         }
     }
