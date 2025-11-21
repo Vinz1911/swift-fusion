@@ -38,6 +38,6 @@ public protocol FusionChannelProtocol: Sendable {
     
     /// Receive a message from a connected bootstraped
     ///
-    /// - Parameter completion: contains `FusionMessage`, `FusionReport` and `FusionState` generic message typ
-    func receive(_ completion: @Sendable @escaping (FusionMessage?, FusionReport?, FusionState?) -> Void) -> Void
+    /// - Parameter completion: contains `FusionResult` generic message typ
+    func receive(_ completion: @Sendable @escaping (FusionResult) -> Void) -> Void
 }

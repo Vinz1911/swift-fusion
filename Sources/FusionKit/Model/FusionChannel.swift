@@ -64,12 +64,10 @@ public final class FusionChannel: FusionChannelProtocol, @unchecked Sendable {
     
     /// Receive a message from a connected bootstraped
     ///
-    /// - Parameter completion: contains `FusionMessage`, `FusionReport` and `FusionState` generic message typ
-    public func receive(_ completion: @Sendable @escaping (FusionMessage?, FusionReport?, FusionState?) -> Void) -> Void {
+    /// - Parameter completion: contains `FusionResult` generic message typ
+    public func receive(_ completion: @Sendable @escaping (FusionResult) -> Void) -> Void {
         result = { result in
-            if case .message(let message) = result { completion(message, nil, nil) }
-            if case .report(let bytes) = result { completion(nil, bytes, nil) }
-            if case .state(let state) = result { completion(nil, nil, state) }
+            completion(result)
         }
     }
 }

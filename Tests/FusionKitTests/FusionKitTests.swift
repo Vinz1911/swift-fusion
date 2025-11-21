@@ -65,10 +65,10 @@ private extension FusionKitTests {
     /// - Parameter test: test case
     private func start(test: TestCase, cancel: Bool = false) {
         guard let channel else { return }
-        channel.receive { [weak self] message, bytes, state in
+        channel.receive { [weak self] result in
             if cancel { channel.cancel() }
-            if let message { self?.assertion(message: message) }
-            if let state { self?.onStateUpdate(state: state, channel: channel, test: test) }
+            if case .message(let message) = result { self?.assertion(message: message) }
+            if case .state(let state) = result { self?.onStateUpdate(state: state, channel: channel, test: test) }
         }
         channel.start()
         wait(for: [exp], timeout: timeout)

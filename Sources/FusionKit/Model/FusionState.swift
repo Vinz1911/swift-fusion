@@ -27,7 +27,8 @@ public enum FusionState: Sendable {
 }
 
 /// The `FusionResult` internal message transmitter
-internal enum FusionResult: Sendable {
+@frozen
+public enum FusionResult: Sendable {
     case message(FusionMessage)
     case report(FusionReport)
     case state(FusionState)
