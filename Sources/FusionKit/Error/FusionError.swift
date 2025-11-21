@@ -15,13 +15,13 @@ import Foundation
 public enum FusionChannelError: Error, Sendable {
     case invalidHostName
     case invalidPortNumber
-    case linkTimeout
+    case channelTimeout
     
     public var description: String {
         switch self {
         case .invalidHostName: return "host name is invalid, failed to create instance"
         case .invalidPortNumber: return "port number is invalid, failed to create instance"
-        case .linkTimeout: return "channel run into timeout, failed to establish channel" }
+        case .channelTimeout: return "channel run into timeout, failed to establish channel" }
     }
 }
 

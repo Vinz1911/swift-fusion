@@ -61,6 +61,7 @@ class FusionKitTests: XCTestCase, @unchecked Sendable {
 
 private extension FusionKitTests {
     /// Create a channel and start
+    ///
     /// - Parameter test: test case
     private func start(test: TestCase, cancel: Bool = false) {
         guard let channel else { return }
@@ -74,6 +75,8 @@ private extension FusionKitTests {
     }
     
     /// Run framer
+    ///
+    /// runs `FusionFramer` create and parse
     private func framer() {
         do {
             let framer = FusionFramer()
@@ -100,6 +103,7 @@ private extension FusionKitTests {
     }
     
     /// Handles test routes for messages
+    ///
     /// - Parameter message: generic `FusionMessage`
     private func assertion(message: FusionMessage) {
         guard let channel else { return }
@@ -118,7 +122,8 @@ private extension FusionKitTests {
     }
     
     /// State update handler for channel
-    /// - Parameter channel: instance of 'Networklink'
+    ///
+    /// - Parameter channel: instance of `FusionChannel`
     private func onStateUpdate(channel: FusionChannel, test: TestCase) {
         channel.onStateUpdate = { [weak self] state in
             guard let self else { return }

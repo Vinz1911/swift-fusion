@@ -34,12 +34,12 @@ public protocol FusionChannelProtocol: Sendable {
     /// The current active `FusionChannel` will be terminated
     func cancel() -> Void
     
-    /// Send a `FusionMessage` to a linked bootstraped
+    /// Send a `FusionMessage` to a connected bootstraped
     ///
     /// - Parameter message: generic type which conforms to `FusionMessage`
     func send<T: FusionMessage>(message: T) -> Void
     
-    /// Receive a message from a linked bootstraped
+    /// Receive a message from a connected bootstraped
     ///
     /// - Parameter completion: contains `FusionMessage` and `FusionReport` generic message typ
     func receive(_ completion: @Sendable @escaping (FusionMessage?, FusionReport?) -> Void) -> Void

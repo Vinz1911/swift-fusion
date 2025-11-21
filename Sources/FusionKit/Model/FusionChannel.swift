@@ -42,7 +42,7 @@ public final class FusionChannel: FusionChannelProtocol, @unchecked Sendable {
         }
         queue.asyncAfter(deadline: .now() + .timeout) { [weak self] in
             guard self?.channel.state != .ready else { return }
-            self?.teardown(); self?.onStateUpdate(.failed(FusionChannelError.linkTimeout))
+            self?.teardown(); self?.onStateUpdate(.failed(FusionChannelError.channelTimeout))
         }
     }
     
@@ -55,7 +55,7 @@ public final class FusionChannel: FusionChannelProtocol, @unchecked Sendable {
         }
     }
     
-    /// Send a `FusionMessage` to a linked bootstraped
+    /// Send a `FusionMessage` to a connected bootstraped
     ///
     /// - Parameter message: generic type which conforms to `FusionMessage`
     public func send<T: FusionMessage>(message: T) -> Void {
@@ -64,7 +64,7 @@ public final class FusionChannel: FusionChannelProtocol, @unchecked Sendable {
         }
     }
     
-    /// Receive a message from a linked bootstraped
+    /// Receive a message from a connected bootstraped
     ///
     /// - Parameter completion: contains `FusionMessage` and `FusionReport` generic message typ
     public func receive(_ completion: @Sendable @escaping (FusionMessage?, FusionReport?) -> Void) -> Void {
@@ -96,7 +96,7 @@ private extension FusionChannel {
         }
     }
     
-    /// Process message data and send it to a linked bootstrap
+    /// Process message data and send it to a connected bootstrap
     ///
     /// - Parameter message: generic type which conforms to `FusionMessage`
     private func processing<T: FusionMessage>(with message: T) -> Void {
@@ -108,7 +108,7 @@ private extension FusionChannel {
         }
     }
     
-    /// Process message data, received rom a linked bootstrap
+    /// Process message data, received rom a connected bootstrap
     ///
     /// - Parameter data: frame data as `DispatchData`
     private func processing(from data: DispatchData) -> Void {
