@@ -15,40 +15,52 @@ struct FusionKitTests {
     
     @Test("Send String")
     func sendString() async throws {
-        let connection = try FusionConnection(host: "de0.weist.org", port: 7878)
+        let connection = try FusionChannel(host: "de0.weist.org", port: 7878)
         try await connection.start()
-        try await connection.send(message: "10000")
-        try await connection.receive { message, bytes in
-            if let message = message as? Data {
+        let task = Task {
+            for try await result in await connection.receive() {
+                guard case .message(let message) = result else { return }
+                guard let message = message as? Data else { return }
                 #expect(message.count == 10000)
+                await connection.cancel()
             }
-            await connection.cancel()
         }
+        try await connection.send(message: "10000")
+        try await task.value
     }
     
     @Test("Send Data")
     func sendData() async throws {
-        let connection = try FusionConnection(host: "de0.weist.org", port: 7878)
+        let connection = try FusionChannel(host: "de0.weist.org", port: 7878)
         try await connection.start()
-        try await connection.send(message: Data(count: 10000))
-        try await connection.receive { message, bytes in
-            if let message = message as? String {
+        let task = Task {
+            for try await result in await connection.receive() {
+                guard case .message(let message) = result else { return }
+                guard let message = message as? String else { return }
                 #expect(message == "10000")
+                await connection.cancel()
             }
-            await connection.cancel()
         }
+        try await connection.send(message: Data(count: 10000))
+        try await task.value
     }
-    /*
+    
     @Test("Multi Message")
     func sendMultiple() async throws {
-        let connection = try FusionConnection(host: "de0.weist.org", port: 7878)
+        let connection = try FusionChannel(host: "de0.weist.org", port: 7878)
         try await connection.start()
-        try await connection.send(message: "1000000")
-        try await connection.receive { messages, _ in
-            if let _ = messages as? Data { try await connection.send(message: "1000000") }
+        let task = Task {
+            for try await result in await connection.receive() {
+                if case .report(let report) = result { print(report.inbound) }
+                guard case .message(let message) = result else { continue }
+                guard let message = message as? Data else { continue }
+                try await connection.send(message: "1000000")
+            }
         }
+        try await connection.send(message: "1000000")
+        try await task.value
     }
-    */
+    
     @Test("Parse Message")
     func parseMessage() async throws {
         let framer = FusionFramer(); var count: Int = .zero

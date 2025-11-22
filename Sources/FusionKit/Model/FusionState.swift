@@ -8,8 +8,8 @@
 
 import Foundation
 
-/// The `FusionBytes` for inbound and outbound bytes
-public struct FusionBytes: Sendable {
+/// The `FusionReport` for inbound and outbound bytes
+public struct FusionReport: Sendable {
     public internal(set) var inbound: Int?
     public internal(set) var outbound: Int?
 }
@@ -25,7 +25,9 @@ public enum FusionState: Sendable {
 }
 
 /// The `FusionResult` internal message transmitter
-internal enum FusionResult: Sendable {
+@frozen
+public enum FusionResult: Sendable {
     case message(FusionMessage)
-    case bytes(FusionBytes)
+    case report(FusionReport)
+    case state(FusionState)
 }
