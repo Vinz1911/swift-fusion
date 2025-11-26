@@ -14,6 +14,7 @@ public final class FusionChannel: FusionChannelProtocol, @unchecked Sendable {
     private var timer: DispatchSourceTimer?
     private let queue: DispatchQueue
     private let framer = FusionFramer()
+    private let weight: FusionWeight
     private let channel: NWConnection
     
     /// The `FusionChannel` is a custom network connector that implements the **Fusion Framing Protocol (FFP)**.
@@ -23,12 +24,13 @@ public final class FusionChannel: FusionChannelProtocol, @unchecked Sendable {
     /// - Parameters:
     ///   - host: the host name as `String`
     ///   - port: the host port as `UInt16`
-    ///   - parameters: network framework `NWParameters`
-    ///   - qos: quality of service class `DispatchQoS`
-    public required init(host: String, port: UInt16, parameters: NWParameters = .tcp, qos: DispatchQoS = .userInteractive) throws {
+    ///   - parameters: configurable `FusionParameters`
+    public required init(host: String, port: UInt16, parameters: FusionParameters = .init()) throws {
         if host.isEmpty { throw(FusionChannelError.invalidHostName) }; if port == .zero { throw(FusionChannelError.invalidPortNumber) }
-        self.channel = NWConnection(host: NWEndpoint.Host(host), port: NWEndpoint.Port(integerLiteral: port), using: parameters)
-        self.queue = DispatchQueue(label: UUID().uuidString, qos: qos)
+        guard parameters.network.defaultProtocolStack.transportProtocol is NWProtocolTCP.Options else { throw FusionChannelError.unsupportedProtocol }
+        self.channel = NWConnection(host: NWEndpoint.Host(host), port: NWEndpoint.Port(integerLiteral: port), using: parameters.network)
+        self.queue = DispatchQueue(label: UUID().uuidString, qos: parameters.qos)
+        self.weight = parameters.weight
     }
     
     /// Start to establish a new channel
@@ -134,7 +136,7 @@ private extension FusionChannel {
     /// The `DispatchData` received from a current established `FusionChannel`
     private func discontiguous() -> Void {
         channel.batch {
-            channel.receiveDiscontiguous(minimumIncompleteLength: .minimum, maximumLength: .maximum) { [weak self] content, _, isComplete, error in
+            channel.receiveDiscontiguous(minimumIncompleteLength: .minimum, maximumLength: weight.rawValue) { [weak self] content, _, isComplete, error in
                 if let error { if error != NWError.posix(.ECANCELED) { self?.result(.state(.failed(error))); self?.teardown(); }; return }
                 if let content { self?.result(.report(.init(inbound: content.count))); self?.processing(from: content) }
                 if isComplete { self?.teardown() } else { self?.discontiguous() }

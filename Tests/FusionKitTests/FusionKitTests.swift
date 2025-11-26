@@ -64,7 +64,7 @@ private extension FusionKitTests {
     ///
     /// - Parameter test: test case
     private func start(test: TestCase, cancel: Bool = false) {
-        guard let channel else { return }
+        guard let channel else { XCTFail("No channel available"); return }
         channel.receive { [weak self] result in
             if cancel { channel.cancel() }
             if case .message(let message) = result { self?.assertion(message: message) }

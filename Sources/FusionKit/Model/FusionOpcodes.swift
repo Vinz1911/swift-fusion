@@ -24,3 +24,14 @@ internal enum FusionConstants: Int, Sendable {
     case header = 0x5
     case frame  = 0xFFFFFFFF
 }
+
+// MARK: - Receive Weight -
+
+/// The `NWConnection` receive channel weight
+@frozen
+public enum FusionWeight: Int {
+    case low     = 0x2000
+    case medium  = 0x4000
+    case high    = 0x8000
+    case extreme = 0x10000
+}

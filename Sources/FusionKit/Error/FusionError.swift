@@ -16,12 +16,14 @@ public enum FusionChannelError: Error, Sendable {
     case invalidHostName
     case invalidPortNumber
     case channelTimeout
+    case unsupportedProtocol
     
     public var description: String {
         switch self {
         case .invalidHostName: return "host name is invalid, failed to create instance"
         case .invalidPortNumber: return "port number is invalid, failed to create instance"
-        case .channelTimeout: return "channel run into timeout, failed to establish channel" }
+        case .channelTimeout: return "channel run into timeout, failed to establish channel"
+        case .unsupportedProtocol: return "protocol is unsupported, use .tcp or .tls instead" }
     }
 }
 

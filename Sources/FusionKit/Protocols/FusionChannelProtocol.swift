@@ -17,9 +17,8 @@ public protocol FusionChannelProtocol: Sendable {
     /// - Parameters:
     ///   - host: the host name as `String`
     ///   - port: the host port as `UInt16`
-    ///   - parameters: network framework `NWParameters`
-    ///   - qos: quality of service class `DispatchQoS`
-    init(host: String, port: UInt16, parameters: NWParameters, qos: DispatchQoS) throws
+    ///   - parameters: configurable `FusionParameters`
+    init(host: String, port: UInt16, parameters: FusionParameters) throws
     
     /// Start to establish a new channel
     ///
