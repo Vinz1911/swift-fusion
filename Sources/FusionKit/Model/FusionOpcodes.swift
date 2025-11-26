@@ -8,6 +8,17 @@
 
 import Foundation
 
+// MARK: - Receive Weight -
+
+/// The `NWConnection` receive channel weight
+@frozen
+public enum FusionWeight: Int, Sendable {
+    case low     = 0x2000
+    case medium  = 0x4000
+    case high    = 0x8000
+    case extreme = 0x10000
+}
+
 // MARK: - Message Flow Control -
 
 /// The `FusionOpcodes` for the frame header
@@ -23,15 +34,4 @@ internal enum FusionConstants: Int, Sendable {
     case opcode = 0x1
     case header = 0x5
     case frame  = 0xFFFFFFFF
-}
-
-// MARK: - Receive Weight -
-
-/// The `NWConnection` receive channel weight
-@frozen
-public enum FusionWeight: Int {
-    case low     = 0x2000
-    case medium  = 0x4000
-    case high    = 0x8000
-    case extreme = 0x10000
 }

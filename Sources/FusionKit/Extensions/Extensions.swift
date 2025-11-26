@@ -12,10 +12,10 @@ import Network
 // MARK: - Int -
 
 internal extension Int {
-    /// Minimum size of received bytes
+    /// Minimum size for bytes control
     static var minimum: Self { 0x1 }
     
-    /// Maximum size of received bytes
+    /// Maximum size for bytes control
     static var maximum: Self { 0x8000 }
 }
 
@@ -35,8 +35,10 @@ internal extension Double {
 
 internal extension Data {
     /// Slice data into chunks
-    var chunks: [Data] {
-        let size = Int.maximum
+    ///
+    /// - Parameter weight: the size of each chunk as `Int`
+    func chunks(of weight: FusionWeight) -> [Data] {
+        let size: Int = Swift.min(weight.rawValue, .maximum)
         return stride(from: .zero, to: count, by: size).map { subdata(in: $0..<(count - $0 > size ? $0 + size : count)) }
     }
     

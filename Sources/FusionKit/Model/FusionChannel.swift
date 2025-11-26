@@ -101,7 +101,7 @@ private extension FusionChannel {
     private func processing<T: FusionMessage>(with message: T) -> Void {
         do {
             let frame = try framer.create(message: message)
-            for chunk in frame.chunks { dispatch(chunk) }
+            for chunk in frame.chunks(of: weight) { dispatch(chunk) }
         } catch {
             result(.state(.failed(error))); teardown()
         }
