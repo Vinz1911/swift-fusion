@@ -8,20 +8,20 @@
 
 import Foundation
 
-// MARK: - Fusion Connection Error -
+// MARK: - Fusion Channel Error -
 
-/// The `FusionConnectionError` specific errors
+/// The `FusionChannelError` specific errors
 @frozen
-public enum FusionConnectionError: Error, Sendable {
-    case missingHost
-    case missingPort
-    case deadConnection
+public enum FusionChannelError: Error, Sendable {
+    case invalidEndpoint
+    case channelTimeout
+    case unsupportedProtocol
     
     public var description: String {
         switch self {
-        case .missingHost: return "missing host"
-        case .missingPort: return "missing port"
-        case .deadConnection: return "dead connection" }
+        case .invalidEndpoint: return "the host name or port number is invalid, failed to create instance"
+        case .channelTimeout: return "channel run into timeout, failed to establish channel"
+        case .unsupportedProtocol: return "protocol is unsupported, use .tcp or .tls instead" }
     }
 }
 
@@ -37,9 +37,9 @@ public enum FusionFramerError: Error, Sendable {
     
     public var description: String {
         switch self {
-        case .parsingFailed: return "message parsing failed"
-        case .readBufferOverflow: return "read buffer overflow"
-        case .writeBufferOverflow: return "write buffer overflow"
-        case .unexpectedOpcode: return "unexpected opcode" }
+        case .parsingFailed: return "unable to parse message frame"
+        case .readBufferOverflow: return "invalid frame size, read buffer overflow"
+        case .writeBufferOverflow: return "invalid frame size, write buffer overflow"
+        case .unexpectedOpcode: return "unexpected opcode, terminating" }
     }
 }

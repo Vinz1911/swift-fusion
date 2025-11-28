@@ -9,11 +9,12 @@
 import Foundation
 import Network
 
-public actor FusionChannel: /*FusionConnectionProtocol,*/ Sendable {
+public actor FusionChannel: FusionChannelProtocol, Sendable {    
     private let stream = AsyncThrowingStream.makeStream(of: FusionResult.self)
     private let framer = FusionFramer()
+    private var weight: FusionWeight
     private var endpoint: NWEndpoint
-    private var connection: NetworkConnection<TCP>?
+    private var channel: NetworkConnection<TCP>?
     private var task: Task<Void, Error>?
     
     /// The `FusionChannel` is a custom network connector that implements the **Fusion Framing Protocol (FFP)**.
@@ -25,28 +26,27 @@ public actor FusionChannel: /*FusionConnectionProtocol,*/ Sendable {
     ///   - port: the host port as `UInt16`
     ///   - parameters: network framework `NWParameters`
     ///   - qos: quality of service class `DispatchQoS`
-    public init(host: String, port: UInt16, parameters: NWParameters = .tcp) throws {
-        if host.isEmpty { throw(FusionConnectionError.missingHost) }
-        if port == .zero { throw(FusionConnectionError.missingPort) }
+    public init(host: String, port: UInt16, weight: FusionWeight = .medium) throws {
+        if host.isEmpty || port == .zero { throw(FusionChannelError.invalidEndpoint) }
         self.endpoint = .hostPort(host: .init(host), port: .init(integerLiteral: port))
+        self.weight = weight
     }
     
-    /// Start a connection
+    /// Start a channel
     ///
     /// - Returns: non returning
-    public func start() async throws {
-        connection = NetworkConnection(to: endpoint) { TCP() }
-        task = Task { [weak self] in await self?.processing() }
+    public func start(with priority: TaskPriority = .high) async {
+        channel = NetworkConnection(to: endpoint) { TCP() }
+        task = Task(priority: priority) { [weak self] in await self?.processing() }
+        await handler()
     }
     
-    /// Cancel the current connection
+    /// Cancel the current channel
     ///
     /// - Returns: non returning
     public func cancel() async -> Void {
-        guard let connection else { return }
         stream.continuation.finish()
         if let task { task.cancel() }
-        connection.tryNextEndpoint()
     }
     
     /// Send messages to a connected host
@@ -59,7 +59,7 @@ public actor FusionChannel: /*FusionConnectionProtocol,*/ Sendable {
     /// Receive a message from a connected host
     ///
     /// - Parameter completion: contains `FusionMessage` and `FusionReport` generic message typ
-    public func receive() async -> AsyncThrowingStream<FusionResult, Error> {
+    public nonisolated func receive() -> AsyncThrowingStream<FusionResult, Error> {
         return stream.stream
     }
 }
@@ -67,15 +67,29 @@ public actor FusionChannel: /*FusionConnectionProtocol,*/ Sendable {
 // MARK: - Private API -
 
 private extension FusionChannel {
+    /// Channel handler for state updates
+    ///
+    /// Manages state updates for the active established channel
+    private func handler() async -> Void {
+        guard let channel else { return }
+        channel.onStateUpdate { [weak self] _, state in guard let self else { return }
+            Task(priority: .high) {
+                if case .cancelled = state { stream.continuation.finish() }
+                if case .waiting(let error) = state { stream.continuation.finish(throwing: error) }
+                if case .failed(let error) = state { stream.continuation.finish(throwing: error) }
+            }
+        }
+    }
+    
     /// Process message data and send it to a host
     ///
     /// - Parameter message: generic type takes `FusionMessage`
     private func processing<T: FusionMessage>(with message: T) async throws -> Void {
-        guard let connection else { throw FusionConnectionError.deadConnection }
+        guard let channel else { return }
         let frame = try await framer.create(message: message)
-        for chunk in frame.chunks {
+        for chunk in frame.chunks(of: weight) {
             stream.continuation.yield(.report(.init(outbound: chunk.count)))
-            try await connection.send(chunk)
+            try await channel.send(chunk)
         }
     }
     
@@ -83,15 +97,15 @@ private extension FusionChannel {
     ///
     /// - Parameter completion: async completion block contains `FusionMessage`
     private func processing() async -> Void {
-        guard let connection else { stream.continuation.finish(throwing: FusionConnectionError.deadConnection); return }
-        defer { stream.continuation.finish() }
         do {
             while !Task.isCancelled {
-                let data = try await connection.receive(atLeast: Int.minimum, atMost: Int.maximum).content
+                guard let channel else { return }
+                let data = try await channel.receive(atLeast: .minimum, atMost: weight.rawValue).content
                 stream.continuation.yield(.report(.init(inbound: data.count)))
                 let messages = try await self.framer.parse(data: data)
                 for message in messages { stream.continuation.yield(.message(message)) }
             }
+            stream.continuation.finish()
         } catch {
             stream.continuation.finish(throwing: error)
         }

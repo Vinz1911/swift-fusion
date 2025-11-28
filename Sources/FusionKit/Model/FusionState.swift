@@ -8,6 +8,8 @@
 
 import Foundation
 
+// MARK: - Byte Report -
+
 /// The `FusionReport` for inbound and outbound bytes
 public struct FusionReport: Sendable {
     public internal(set) var inbound: Int?
@@ -16,18 +18,9 @@ public struct FusionReport: Sendable {
 
 // MARK: - State Types -
 
-/// The `FusionState` state handler
-@frozen
-public enum FusionState: Sendable {
-    case ready
-    case cancelled
-    case failed(Error?)
-}
-
 /// The `FusionResult` internal message transmitter
 @frozen
 public enum FusionResult: Sendable {
     case message(FusionMessage)
     case report(FusionReport)
-    case state(FusionState)
 }

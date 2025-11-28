@@ -1,5 +1,5 @@
 //
-//  FusionConnectionProtocol.swift
+//  FusionChannelProtocol.swift
 //  FusionKit
 //
 //  Created by Vinzenz Weist on 07.06.21.
@@ -9,7 +9,7 @@
 import Foundation
 import Network
 
-public protocol FusionConnectionProtocol: Sendable {
+public protocol FusionChannelProtocol: Sendable {
     /// The `FusionChannel` is a custom network connector that implements the **Fusion Framing Protocol (FFP)**.
     /// It is built on top of the standard `Network` framework library. This fast and lightweight custom framing protocol
     /// enables high-speed data transmission and provides fine-grained control over network flow.
@@ -19,14 +19,14 @@ public protocol FusionConnectionProtocol: Sendable {
     ///   - port: the host port as `UInt16`
     ///   - parameters: network framework `NWParameters`
     ///   - qos: quality of service class `DispatchQoS`
-    init(host: String, port: UInt16, parameters: NWParameters) throws
+    init(host: String, port: UInt16, weight: FusionWeight) throws
     
-    /// Start a connection
+    /// Start a channel
     ///
     /// - Returns: non returning
-    func start() async throws -> Void
+    func start(with priority: TaskPriority) async -> Void
     
-    /// Cancel the current connection
+    /// Cancel the current channel
     ///
     /// - Returns: non returning
     func cancel() async -> Void
@@ -35,8 +35,9 @@ public protocol FusionConnectionProtocol: Sendable {
     ///
     /// - Parameter message: generic type takes `String`, `Data` and `UInt16` based messages
     func send<T: FusionMessage>(message: T) async throws -> Void
+    
     /// Receive a message from a connected host
     ///
     /// - Parameter completion: contains `FusionMessage` and `FusionReport` generic message typ
-    func receive(_ completion: @Sendable @escaping (FusionMessage?, FusionReport?) async throws -> Void) async throws -> Void
+    nonisolated func receive() -> AsyncThrowingStream<FusionResult, Error>
 }
