@@ -17,27 +17,26 @@ public protocol FusionChannelProtocol: Sendable {
     /// - Parameters:
     ///   - host: the host name as `String`
     ///   - port: the host port as `UInt16`
-    ///   - parameters: network framework `NWParameters`
-    ///   - qos: quality of service class `DispatchQoS`
-    init(host: String, port: UInt16, weight: FusionWeight) throws
+    ///   - parameters: network framework `FusionParameters`
+    init(host: String, port: UInt16, parameters: FusionParameters) throws
     
-    /// Start a channel
+    /// Start to establish a new channel
     ///
-    /// - Returns: non returning
-    func start(with priority: TaskPriority) async -> Void
+    /// Set config for `NetworkConnection` and establish new channel
+    func start() async throws -> Void
     
     /// Cancel the current channel
     ///
-    /// - Returns: non returning
+    /// Stops the receiver and cancels the current channel
     func cancel() async -> Void
     
-    /// Send messages to a connected host
+    /// Send messages over the established channel
     ///
-    /// - Parameter message: generic type takes `String`, `Data` and `UInt16` based messages
+    /// - Parameter message: the message conform to `FusionMessage`
     func send<T: FusionMessage>(message: T) async throws -> Void
     
-    /// Receive a message from a connected host
+    /// Receive messages over the established channel
     ///
-    /// - Parameter completion: contains `FusionMessage` and `FusionReport` generic message typ
+    /// - Returns: the iteratable `AsyncThrowingStream` contains `FusionResult`
     nonisolated func receive() -> AsyncThrowingStream<FusionResult, Error>
 }

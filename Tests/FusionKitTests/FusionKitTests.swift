@@ -16,7 +16,7 @@ struct FusionKitTests {
     @Test("Send String")
     func sendString() async throws {
         let connection = try FusionChannel(host: "de0.weist.org", port: 7878)
-        await connection.start()
+        try await connection.start()
         let task = Task {
             for try await result in connection.receive() {
                 guard case .message(let message) = result else { continue }
@@ -32,7 +32,7 @@ struct FusionKitTests {
     @Test("Send Data")
     func sendData() async throws {
         let connection = try FusionChannel(host: "de0.weist.org", port: 7878)
-        await connection.start()
+        try await connection.start()
         let task = Task {
             for try await result in connection.receive() {
                 guard case .message(let message) = result else { continue }
@@ -51,7 +51,7 @@ struct FusionKitTests {
         for _ in 0...3 { channels.append(try FusionChannel(host: "de0.weist.org", port: 7878)) }
         
         for channel in channels {
-            await channel.start()
+            try await channel.start()
             
             Task {
                 for try await result in channel.receive() {

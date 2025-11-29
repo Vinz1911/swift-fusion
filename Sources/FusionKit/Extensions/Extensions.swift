@@ -24,11 +24,14 @@ internal extension UInt32 {
     var endian: Data { withUnsafeBytes(of: self.bigEndian) { Data($0) } }
 }
 
-// MARK: - Double -
+// MARK: - Duration -
 
-internal extension Double {
-    /// Timeout time
-    static var timeout: Self { 3.0 }
+internal extension Duration {
+    /// Interval time
+    static var interval: Self { .milliseconds(50) }
+    
+    /// Timeout deadline
+    static var timeout: Self { .seconds(4.0) }
 }
 
 // MARK: - Data -
@@ -36,9 +39,9 @@ internal extension Double {
 internal extension Data {
     /// Slice data into chunks
     ///
-    /// - Parameter weight: the size of each chunk as `Int`
-    func chunks(of weight: FusionWeight) -> [Data] {
-        let size: Int = Swift.min(weight.rawValue, .maximum)
+    /// - Parameter leverage: the size of each chunk as `Int`
+    func chunks(of leverage: FusionLeverage) -> [Data] {
+        let size: Int = Swift.min(leverage.rawValue, .maximum)
         return stride(from: .zero, to: count, by: size).map { subdata(in: $0..<(count - $0 > size ? $0 + size : count)) }
     }
     

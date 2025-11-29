@@ -8,11 +8,15 @@
 
 import Foundation
 
+// MARK: - Generic Fusion Message Protocol -
+
 /// The `FusionMessage` protocol for message compliance
 public protocol FusionMessage: Sendable {
     var opcode: UInt8 { get }
     var raw: Data { get }
 }
+
+// MARK: - Fusion Message Extensions -
 
 /// Conformance to protocol `FusionMessage`
 extension UInt16: FusionMessage {
