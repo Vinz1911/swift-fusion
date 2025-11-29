@@ -13,76 +13,75 @@ import Network
 
 @Suite("FusionKit Tests")
 struct FusionKitTests {
-    @Test("Send String")
-    func sendString() async throws {
-        let connection = try FusionChannel(host: "de0.weist.org", port: 7878)
-        try await connection.start()
-        let task = Task {
-            for try await result in connection.receive() {
-                guard case .message(let message) = result else { continue }
-                guard let message = message as? Data else { continue }
-                #expect(message.count == 10000)
-                await connection.cancel()
-            }
-        }
-        try await connection.send(message: "10000")
-        try await task.value
+    let connection = try? FusionChannel(host: "de0.weist.org", port: 7878)
+    
+    /// Send `String` message
+    @Test("Send String") func sendString() async throws {
+        try await performTransmission(message: "16384")
     }
     
-    @Test("Send Data")
-    func sendData() async throws {
-        let connection = try FusionChannel(host: "de0.weist.org", port: 7878)
-        try await connection.start()
-        let task = Task {
-            for try await result in connection.receive() {
-                guard case .message(let message) = result else { continue }
-                guard let message = message as? String else { continue }
-                #expect(message == "10000")
-                await connection.cancel()
-            }
-        }
-        try await connection.send(message: Data(count: 10000))
-        try await task.value
+    /// Send `Data` message
+    @Test("Send Data") func sendData() async throws {
+        try await performTransmission(message: Data(count: 16384))
     }
     
-    @Test("Multi Message")
-    func sendMultiple() async throws {
-        var channels: [FusionChannel] = .init()
-        for _ in 0...3 { channels.append(try FusionChannel(host: "de0.weist.org", port: 7878)) }
+    /// Send `UInt16` message
+    @Test("Send UInt") func sendUInt() async throws {
+        try await performTransmission(message: UInt16(16384))
+    }
+    
+    /// Create + parse with `FusionFramer`
+    @Test("Parse Message") func parseMessage() async throws {
+        let framer = FusionFramer(); var frames: Data = .init()
+        var created: [FusionMessage] = .init(), parsed: [FusionMessage] = .init()
         
-        for channel in channels {
-            try await channel.start()
-            
-            Task {
-                for try await result in channel.receive() {
-                    if case .report(let report) = result, let inbound = report.inbound { print(inbound) }
-                    guard case .message(let message) = result else { continue }
-                    guard let _ = message as? Data else { continue }
-                    try await channel.send(message: "1000000")
-                }
-            }
-            try await channel.send(message: "1000000")
-        }
-        try await Task.sleep(for: .seconds(100))
+        created.append("Hello World! 🌍")
+        created.append(Data(count: 16384))
+        created.append(UInt16.max)
+        
+        frames.append(try await framer.create(message: created[0]))
+        frames.append(try await framer.create(message: created[1]))
+        frames.append(try await framer.create(message: created[2]))
+        
+        let messages = try await framer.parse(data: frames)
+        for message in messages { parsed.append(message) }
+        
+        if let create = created[0] as? String, let parse = parsed[0] as? String { print("🟣 Created String: \(create), Parsed String: \(parse)"); #expect(create == parse) }
+        if let create = created[1] as? Data, let parse = parsed[1] as? Data { print("🟣 Created Data: \(create.count), Parsed Data: \(parse.count)"); #expect(create == parse) }
+        if let create = created[2] as? UInt16, let parse = parsed[2] as? UInt16 { print("🟣 Created UInt16: \(create), Parsed UInt16: \(parse)"); #expect(create == parse) }
     }
-    
-    @Test("Parse Message")
-    func parseMessage() async throws {
-        let framer = FusionFramer(); var count: Int = .zero
-        var message = try await framer.create(message: "FluxCapacitor!")
+}
 
-        var buffer = Data()
-        for length in stride(from: Int(message[4]), through: 6, by: -1) {
-            var copy = message; copy[4] = UInt8(length); buffer.append(copy)
-            if copy.count > .zero { message.removeLast(); }
-            count += 1
+// MARK: - Private API -
+
+extension FusionKitTests {
+    /// Perform Send + Receive
+    ///
+    /// - Parameter message: message that conforms to `FusionMessage`
+    private func performTransmission<T: FusionMessage>(message: T) async throws {
+        guard let connection else { throw FusionChannelError.establishmentFailed }
+        try await connection.start()
+        let task = Task {
+            for try await result in connection.receive() {
+                guard case .message(let messages) = result else { continue }
+                if message is String {
+                    guard let messages = messages as? Data else { continue }
+                    print("🟣 Received Data: \(messages.count)")
+                    #expect(messages.count == Int(message as! String))
+                }
+                if message is Data {
+                    guard let messages = messages as? String else { continue }
+                    print("🟣 Received String: \(messages)")
+                    #expect(messages == "\((message as! Data).count)")
+                }
+                if message is UInt16 {
+                    guard let messages = messages as? UInt16 else { continue }
+                    print("🟣 Received UInt16: \(messages)")
+                    #expect(messages == message as! UInt16)
+                }
+                await connection.cancel()
+            }
         }
-        
-        var parsed: [String] = []
-        let messages = try await framer.parse(data: buffer)
-        for message in messages {
-            if let message = message as? String { parsed.append(message) }
-        }
-        #expect(count == parsed.count)
+        try await connection.send(message: message); try await task.value
     }
 }
