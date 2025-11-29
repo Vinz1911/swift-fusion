@@ -45,8 +45,8 @@ public actor FusionChannel: FusionChannelProtocol, Sendable {
     ///
     /// - Returns: non returning
     public func cancel() async -> Void {
-        stream.continuation.finish()
         if let task { task.cancel() }
+        stream.continuation.finish()
     }
     
     /// Send messages to a connected host
