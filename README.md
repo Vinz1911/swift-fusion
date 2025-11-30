@@ -11,7 +11,11 @@ enables high-speed data transmission and provides fine-grained control over netw
 
 ## Installation:
 ### Swift Packages
-[Swift Package Manager](https://developer.apple.com/documentation/xcode/swift-packages). Just add this repo to your project.
+
+> [!IMPORTANT]  
+> With the beginning of version 20.0.0 the framework uses an entire new private and public interface.
+> The Framework was migrated to use the new structured concurrency based API for safe and easy handling.
+> Below version 20.0.0 can be used for 'old' API interface but will not be actively maintained anymore.
 
 ```swift
 // ...
@@ -21,11 +25,6 @@ dependencies: [
 ],
 // ...
 ```
-
-> [!IMPORTANT]  
-> With the beginning of version 20.0.0 the framework uses an entire new private and public interface.
-> The Framework was migrated to use the new structured concurrency based API for safe and easy handling.
-> Below version 20.0.0 can be used for 'old' API interface but will not be actively maintained anymore.
 
 ## Import:
 ```swift
