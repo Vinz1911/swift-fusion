@@ -18,18 +18,10 @@ public struct FusionReport: Sendable {
 
 // MARK: - Fusion Result -
 
-/// The `FusionState` state handler
-@frozen
-public enum FusionState: Sendable {
-    case ready
-    case cancelled
-    case failed(Error?)
-}
-
 /// The `FusionResult` internal message transmitter
 @frozen
 public enum FusionResult: Sendable {
+    case ready
     case message(FusionMessage)
     case report(FusionReport)
-    case state(FusionState)
 }

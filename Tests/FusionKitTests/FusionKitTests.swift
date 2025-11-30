@@ -46,11 +46,6 @@ class FusionKitTests: XCTestCase, @unchecked Sendable {
         start(test: .ping)
     }
     
-    /// Start test sending and cancel
-    func testCancel() {
-        start(test: .data, cancel: true)
-    }
-    
     /// Start test creating and parsing string based message
     func testParsingStringMessage() {
         framer()
@@ -63,12 +58,19 @@ private extension FusionKitTests {
     /// Create a channel and start
     ///
     /// - Parameter test: test case
-    private func start(test: TestCase, cancel: Bool = false) {
+    private func start(test: TestCase) {
         guard let channel else { XCTFail("No channel available"); return }
         channel.receive { [weak self] result in
-            if cancel { channel.cancel() }
-            if case .message(let message) = result { self?.assertion(message: message) }
-            if case .state(let state) = result { self?.onStateUpdate(state: state, channel: channel, test: test) }
+            if case .success(let success) = result {
+                if case .message(let message) = success { self?.assertion(message: message) }
+                if case .ready = success {
+                    guard let self else { return }
+                    if test == .string { channel.send(message: buffer) }
+                    if test == .data { channel.send(message: Data(count: Int(buffer)!)) }
+                    if test == .ping { channel.send(message: UInt16(buffer)!) }
+                }
+            }
+            if case .failure(let error) = result { XCTFail("failed with error: \(error)") }
         }
         channel.start()
         wait(for: [exp], timeout: timeout)
@@ -119,20 +121,5 @@ private extension FusionKitTests {
             XCTAssertEqual(message, buffer)
             channel.cancel(); exp.fulfill()
         }
-    }
-    
-    /// State update handler for channel
-    ///
-    /// - Parameters:
-    ///   - state: state changes from `FusionState`
-    ///   - channel: the current `FusionChannel`
-    private func onStateUpdate(state: FusionState, channel: FusionChannel, test: TestCase) {
-        if case .ready = state {
-            if test == .string { channel.send(message: buffer) }
-            if test == .data { channel.send(message: Data(count: Int(buffer)!)) }
-            if test == .ping { channel.send(message: UInt16(buffer)!) }
-        }
-        if case .cancelled = state { exp.fulfill() }
-        if case let .failed(error) = state { guard let error else { return }; XCTFail("failed with error: \(error)") }
     }
 }

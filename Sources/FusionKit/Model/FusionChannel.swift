@@ -10,7 +10,7 @@ import Foundation
 import Network
 
 public final class FusionChannel: FusionChannelProtocol, @unchecked Sendable {
-    private var result: (@Sendable (FusionResult) -> Void) = { _ in }
+    private let (stream, continuation) = AsyncThrowingStream.makeStream(of: FusionResult.self)
     private var timer: DispatchSourceTimer?
     
     private let queue: DispatchQueue
@@ -41,7 +41,7 @@ public final class FusionChannel: FusionChannelProtocol, @unchecked Sendable {
         queue.asyncAfter(deadline: .now() + .timeout) { [weak self] in
             guard self?.channel.state != .ready else { return }
             self?.channel.cancel(); self?.framer.reset()
-            self?.result(.state(.failed(FusionChannelError.channelTimeout)))
+            self?.continuation.finish(throwing: FusionChannelError.channelTimeout)
         }
     }
     
@@ -62,8 +62,14 @@ public final class FusionChannel: FusionChannelProtocol, @unchecked Sendable {
     /// Receive a message from a connected bootstraped
     ///
     /// - Parameter completion: contains `FusionResult` generic message typ
-    public func receive(_ completion: @Sendable @escaping (FusionResult) -> Void) -> Void {
-        result = { completion($0) }
+    public func receive(_ completion: @Sendable @escaping (Result<FusionResult, Error>) -> Void) -> Void {
+        Task(priority: .userInitiated) {
+            do {
+                for try await message in stream { completion(.success(message)) }
+            } catch {
+                completion(.failure(error))
+            }
+        }
     }
 }
 
@@ -75,9 +81,9 @@ private extension FusionChannel {
     /// Manages state updates for the active established channel
     private func state() -> Void {
         channel.stateUpdateHandler = { [weak self] state in
-            if case .ready = state { self?.result(.state(.ready)) }
-            if case .cancelled = state { self?.result(.state(.cancelled))  }
-            if case .failed(let error) = state { self?.channel.cancel(); self?.framer.reset(); self?.result(.state(.failed(error))) }
+            if case .ready = state { self?.continuation.yield(.ready) }
+            if case .cancelled = state { self?.continuation.finish() }
+            if case .failed(let error) = state { self?.continuation.finish(throwing: error); self?.channel.cancel(); self?.framer.reset() }
         }
     }
     
@@ -90,12 +96,12 @@ private extension FusionChannel {
                 let frame = try framer.create(message: message)
                 for chunk in frame.chunks(of: leverage) {
                     channel.send(content: chunk, completion: .contentProcessed { [weak self] error in
-                        self?.result(.report(FusionReport(outbound: chunk.count)))
-                        if let error, error != NWError.posix(.ECANCELED) { self?.result(.state(.failed(error))) }
+                        self?.continuation.yield(.report(.init(outbound: chunk.count)))
+                        if let error, error != NWError.posix(.ECANCELED) { self?.continuation.finish(throwing: error) }
                     })
                 }
             } catch {
-                result(.state(.failed(error))); channel.cancel(); framer.reset()
+                continuation.finish(throwing: error); channel.cancel(); framer.reset()
             }
         }
     }
@@ -106,14 +112,14 @@ private extension FusionChannel {
     private func process() -> Void {
         channel.batch {
             channel.receiveDiscontiguous(minimumIncompleteLength: .minimum, maximumLength: leverage.rawValue) { [weak self] content, _, isComplete, error in
-                if let error { if error != NWError.posix(.ECANCELED) { self?.result(.state(.failed(error))); self?.channel.cancel(); self?.framer.reset() }; return }
+                if let error { if error != NWError.posix(.ECANCELED) { self?.continuation.finish(throwing: error); self?.channel.cancel(); self?.framer.reset() }; return }
                 if let content {
                     do {
-                        self?.result(.report(.init(inbound: content.count)))
+                        self?.continuation.yield(.report(.init(inbound: content.count)))
                         guard let messages = try self?.framer.parse(data: content) else { return }
-                        for message in messages { self?.result(.message(message)) }
+                        for message in messages { self?.continuation.yield(.message(message)) }
                     } catch {
-                        self?.result(.state(.failed(error))); self?.channel.cancel(); self?.framer.reset()
+                        self?.continuation.finish(throwing: error); self?.channel.cancel(); self?.framer.reset()
                     }
                 }
                 if isComplete { self?.channel.cancel(); self?.framer.reset() } else { self?.process() }
