@@ -12,9 +12,10 @@ import Network
 public final class FusionChannel: FusionChannelProtocol, @unchecked Sendable {
     private var result: (@Sendable (FusionResult) -> Void) = { _ in }
     private var timer: DispatchSourceTimer?
+    
     private let queue: DispatchQueue
     private let framer = FusionFramer()
-    private let weight: FusionWeight
+    private let leverage: FusionLeverage
     private let channel: NWConnection
     
     /// The `FusionChannel` is a custom network connector that implements the **Fusion Framing Protocol (FFP)**.
@@ -22,15 +23,12 @@ public final class FusionChannel: FusionChannelProtocol, @unchecked Sendable {
     /// enables high-speed data transmission and provides fine-grained control over network flow.
     ///
     /// - Parameters:
-    ///   - host: the host name as `String`
-    ///   - port: the host port as `UInt16`
-    ///   - parameters: configurable `FusionParameters`
-    public required init(host: String, port: UInt16, parameters: FusionParameters = .init()) throws {
-        if host.isEmpty { throw(FusionChannelError.invalidHostName) }; if port == .zero { throw(FusionChannelError.invalidPortNumber) }
-        guard parameters.network.defaultProtocolStack.transportProtocol is NWProtocolTCP.Options else { throw FusionChannelError.unsupportedProtocol }
-        self.channel = NWConnection(host: NWEndpoint.Host(host), port: NWEndpoint.Port(integerLiteral: port), using: parameters.network)
+    ///   - endpoint: the `NWEndpoint`
+    ///   - parameters: the configurable `FusionParameters`
+    public required init(using endpoint: NWEndpoint, parameters: FusionParameters = .init()) throws {
+        self.channel = NWConnection(to: endpoint, using: .init(tls: parameters.tls, tcp: parameters.tcp))
         self.queue = DispatchQueue(label: UUID().uuidString, qos: parameters.qos)
-        self.weight = parameters.weight
+        self.leverage = parameters.leverage
     }
     
     /// Start to establish a new channel
@@ -38,11 +36,12 @@ public final class FusionChannel: FusionChannelProtocol, @unchecked Sendable {
     /// Establish a new `FusionChannel` to a compatible booststrap
     public func start() -> Void {
         queue.async { [weak self] in guard let self else { return }
-            handler(); discontiguous(); channel.start(queue: queue)
+            state(); process(); channel.start(queue: queue)
         }
         queue.asyncAfter(deadline: .now() + .timeout) { [weak self] in
             guard self?.channel.state != .ready else { return }
-            self?.teardown(); self?.result(.state(.failed(FusionChannelError.channelTimeout)))
+            self?.channel.cancel(); self?.framer.reset()
+            self?.result(.state(.failed(FusionChannelError.channelTimeout)))
         }
     }
     
@@ -50,96 +49,74 @@ public final class FusionChannel: FusionChannelProtocol, @unchecked Sendable {
     ///
     /// The current active `FusionChannel` will be terminated
     public func cancel() -> Void {
-        queue.async { [weak self] in
-            self?.teardown()
-        }
+        queue.async { [weak self] in self?.channel.cancel(); self?.framer.reset() }
     }
     
     /// Send a `FusionMessage` to a connected bootstraped
     ///
     /// - Parameter message: generic type which conforms to `FusionMessage`
     public func send<T: FusionMessage>(message: T) -> Void {
-        queue.async { [weak self] in
-            self?.processing(with: message)
-        }
+        queue.async { [weak self] in self?.process(with: message) }
     }
     
     /// Receive a message from a connected bootstraped
     ///
     /// - Parameter completion: contains `FusionResult` generic message typ
     public func receive(_ completion: @Sendable @escaping (FusionResult) -> Void) -> Void {
-        result = { result in
-            completion(result)
-        }
+        result = { completion($0) }
     }
 }
 
 // MARK: - Private API -
 
 private extension FusionChannel {
-    /// Clean and cancel `FusionChannel`
-    ///
-    /// The current active `FusionChannel` will be terminated cleaned
-    private func teardown() -> Void {
-        channel.cancel(); framer.reset()
-    }
-    
     /// Channel handler for state updates
     ///
     /// Manages state updates for the active established channel
-    private func handler() -> Void {
+    private func state() -> Void {
         channel.stateUpdateHandler = { [weak self] state in
             if case .ready = state { self?.result(.state(.ready)) }
             if case .cancelled = state { self?.result(.state(.cancelled))  }
-            if case .failed(let error) = state { self?.teardown(); self?.result(.state(.failed(error))) }
-        }
-    }
-    
-    /// Process message data and send it to a connected bootstrap
-    ///
-    /// - Parameter message: generic type which conforms to `FusionMessage`
-    private func processing<T: FusionMessage>(with message: T) -> Void {
-        do {
-            let frame = try framer.create(message: message)
-            for chunk in frame.chunks(of: weight) { dispatch(chunk) }
-        } catch {
-            result(.state(.failed(error))); teardown()
-        }
-    }
-    
-    /// Process message data, received rom a connected bootstrap
-    ///
-    /// - Parameter data: frame data as `DispatchData`
-    private func processing(from data: DispatchData) -> Void {
-        do {
-            let messages = try framer.parse(data: data)
-            for message in messages { result(.message(message)) }
-        } catch {
-            result(.state(.failed(error))); teardown()
+            if case .failed(let error) = state { self?.channel.cancel(); self?.framer.reset(); self?.result(.state(.failed(error))) }
         }
     }
     
     /// Dispatch tcp data from a message frame
     ///
-    /// - Parameter content: the content `Data` to transmit
-    private func dispatch(_ content: Data) -> Void {
+    /// - Parameter content: the content `FusionMessage` to transmit
+    private func process<T: FusionMessage>(with message: T) -> Void {
         channel.batch {
-            channel.send(content: content, completion: .contentProcessed { [weak self] error in
-                self?.result(.report(FusionReport(outbound: content.count)))
-                if let error, error != NWError.posix(.ECANCELED) { self?.result(.state(.failed(error))) }
-            })
+            do {
+                let frame = try framer.create(message: message)
+                for chunk in frame.chunks(of: leverage) {
+                    channel.send(content: chunk, completion: .contentProcessed { [weak self] error in
+                        self?.result(.report(FusionReport(outbound: chunk.count)))
+                        if let error, error != NWError.posix(.ECANCELED) { self?.result(.state(.failed(error))) }
+                    })
+                }
+            } catch {
+                result(.state(.failed(error))); channel.cancel(); framer.reset()
+            }
         }
     }
     
     /// Receive discontiguous `TCP` data frames
     ///
-    /// The `DispatchData` received from a current established `FusionChannel`
-    private func discontiguous() -> Void {
+    /// The parsed `FusionMessage` from the current established `FusionChannel`
+    private func process() -> Void {
         channel.batch {
-            channel.receiveDiscontiguous(minimumIncompleteLength: .minimum, maximumLength: weight.rawValue) { [weak self] content, _, isComplete, error in
-                if let error { if error != NWError.posix(.ECANCELED) { self?.result(.state(.failed(error))); self?.teardown(); }; return }
-                if let content { self?.result(.report(.init(inbound: content.count))); self?.processing(from: content) }
-                if isComplete { self?.teardown() } else { self?.discontiguous() }
+            channel.receiveDiscontiguous(minimumIncompleteLength: .minimum, maximumLength: leverage.rawValue) { [weak self] content, _, isComplete, error in
+                if let error { if error != NWError.posix(.ECANCELED) { self?.result(.state(.failed(error))); self?.channel.cancel(); self?.framer.reset() }; return }
+                if let content {
+                    do {
+                        self?.result(.report(.init(inbound: content.count)))
+                        guard let messages = try self?.framer.parse(data: content) else { return }
+                        for message in messages { self?.result(.message(message)) }
+                    } catch {
+                        self?.result(.state(.failed(error))); self?.channel.cancel(); self?.framer.reset()
+                    }
+                }
+                if isComplete { self?.channel.cancel(); self?.framer.reset() } else { self?.process() }
             }
         }
     }

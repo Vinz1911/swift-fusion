@@ -15,10 +15,9 @@ public protocol FusionChannelProtocol: Sendable {
     /// enables high-speed data transmission and provides fine-grained control over network flow.
     ///
     /// - Parameters:
-    ///   - host: the host name as `String`
-    ///   - port: the host port as `UInt16`
-    ///   - parameters: configurable `FusionParameters`
-    init(host: String, port: UInt16, parameters: FusionParameters) throws
+    ///   - endpoint: the `NWEndpoint`
+    ///   - parameters: the configurable `FusionParameters`
+    init(using endpoint: NWEndpoint, parameters: FusionParameters) throws
     
     /// Start to establish a new channel
     ///

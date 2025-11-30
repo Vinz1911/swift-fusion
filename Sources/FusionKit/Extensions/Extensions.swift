@@ -36,9 +36,9 @@ internal extension Double {
 internal extension Data {
     /// Slice data into chunks
     ///
-    /// - Parameter weight: the size of each chunk as `Int`
-    func chunks(of weight: FusionWeight) -> [Data] {
-        let size: Int = Swift.min(weight.rawValue, .maximum)
+    /// - Parameter leverage: the size of each chunk as `Int`
+    func chunks(of leverage: FusionLeverage) -> [Data] {
+        let size: Int = Swift.min(leverage.rawValue, .maximum)
         return stride(from: .zero, to: count, by: size).map { subdata(in: $0..<(count - $0 > size ? $0 + size : count)) }
     }
     

@@ -8,7 +8,7 @@
 
 import Foundation
 
-// MARK: - Receive + Transmit Bytes -
+// MARK: - Fusion Report -
 
 /// The `FusionReport` for inbound and outbound bytes
 public struct FusionReport: Sendable {
@@ -16,7 +16,7 @@ public struct FusionReport: Sendable {
     public internal(set) var outbound: Int?
 }
 
-// MARK: - State Types -
+// MARK: - Fusion Result -
 
 /// The `FusionState` state handler
 @frozen

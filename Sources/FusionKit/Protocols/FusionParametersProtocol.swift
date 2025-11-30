@@ -9,20 +9,24 @@ import Foundation
 import Network
 
 public protocol FusionParametersProtocol: Sendable {
-    /// The underlying `NWParameters`
-    var network: NWParameters { get set }
+    /// underlying channel specific `NWProtocolTCP.Options`
+    var tcp: NWProtocolTCP.Options { get set }
+    
+    /// underlying channel specific `NWProtocolTLS.Options`
+    var tls: NWProtocolTLS.Options? { get set }
     
     /// The service class `DispatchQoS`
     var qos: DispatchQoS { get set }
     
-    /// The `FusionWeight` paramter for `.maximumLength:`
-    var weight: FusionWeight { get set }
+    /// The `FusionLeverage` paramter for `.maximumLength:`
+    var leverage: FusionLeverage { get set }
     
     /// The configurable `FusionParameters`
     ///
     /// - Parameters:
-    ///   - network: underlying channel specific `NWParameters`
+    ///   - tcp: underlying channel specific `NWProtocolTCP.Options`
+    ///   - tls: underlying channel specific `NWProtocolTLS.Options`
     ///   - qos: dispatch queue qos `DispatchQoS`
-    ///   - weight: receive channel weight `FusionWeight`
-    init(using network: NWParameters, qos: DispatchQoS, weight: FusionWeight)
+    ///   - leverage: receive channel leverage `FusionLeverage`
+    init(tcp: NWProtocolTCP.Options, tls: NWProtocolTLS.Options?, qos: DispatchQoS, leverage: FusionLeverage)
 }

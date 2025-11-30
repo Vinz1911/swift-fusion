@@ -20,7 +20,7 @@ private enum TestCase {
 // MARK: - Tests -
 
 class FusionKitTests: XCTestCase, @unchecked Sendable {
-    private var channel = try? FusionChannel(host: "de0.weist.org", port: 7878)
+    private var channel = try? FusionChannel(using: .hostPort(host: "de0.weist.org", port: 7878))
     private var buffer = "50000"
     private let timeout = 10.0
     private let uuid = UUID().uuidString

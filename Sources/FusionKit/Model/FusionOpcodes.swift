@@ -10,9 +10,9 @@ import Foundation
 
 // MARK: - Receive Weight -
 
-/// The `NWConnection` receive channel weight
+/// The `NWConnection` receive channel leverage
 @frozen
-public enum FusionWeight: Int, Sendable {
+public enum FusionLeverage: Int, Sendable {
     case low     = 0x2000
     case medium  = 0x4000
     case high    = 0x8000

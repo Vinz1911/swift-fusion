@@ -12,19 +12,22 @@ import Network
 
 @frozen
 public struct FusionParameters: FusionParametersProtocol, Sendable {
-    public var network: NWParameters
+    public var tcp: NWProtocolTCP.Options
+    public var tls: NWProtocolTLS.Options?
     public var qos: DispatchQoS
-    public var weight: FusionWeight
+    public var leverage: FusionLeverage
     
     /// The configurable `FusionParameters`
     ///
     /// - Parameters:
-    ///   - network: underlying channel specific `NWParameters`
+    ///   - tcp: underlying channel specific `NWProtocolTCP.Options`
+    ///   - tls: underlying channel specific `NWProtocolTLS.Options`
     ///   - qos: dispatch queue qos `DispatchQoS`
-    ///   - weight: receive channel weight `FusionWeight`
-    public init(using network: NWParameters = .tcp, qos: DispatchQoS = .userInteractive, weight: FusionWeight = .medium) {
-        self.network = network
+    ///   - leverage: receive channel leverage `FusionLeverage`
+    public init(tcp: NWProtocolTCP.Options = .init(), tls: NWProtocolTLS.Options? = nil, qos: DispatchQoS = .userInteractive, leverage: FusionLeverage = .medium) {
+        self.tcp = tcp
+        self.tls = tls
         self.qos = qos
-        self.weight = weight
+        self.leverage = leverage
     }
 }

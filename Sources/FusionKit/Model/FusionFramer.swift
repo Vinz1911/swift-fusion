@@ -53,6 +53,7 @@ internal final class FusionFramer: FusionFramerProtocol, @unchecked Sendable {
             
             if buffer.count >= length { buffer = buffer.subdata(in: .init(length)..<buffer.count) };
             if let extracted = buffer.extractLength() { length = extracted }
-        }; return messages
+        }
+        return messages
     }
 }
