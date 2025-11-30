@@ -17,7 +17,7 @@ enables high-speed data transmission and provides fine-grained control over netw
 // ...
 dependencies: [
     // Dependencies declare other packages that this package depends on.
-    .package(url: "https://github.com/Vinz1911/FusionKit.git", from: .init(stringLiteral: "20.0.0")),
+    .package(url: "https://github.com/Vinz1911/FusionKit.git", exact: "20.0.0"),
 ],
 // ...
 ```
