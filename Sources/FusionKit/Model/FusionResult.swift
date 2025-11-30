@@ -13,6 +13,8 @@ import Foundation
 /// The `FusionResult` internal message transmitter
 @frozen
 public enum FusionResult: Sendable {
+    case ready
+    case failure(Error)
     case message(FusionMessage)
     case report(FusionReport)
 }

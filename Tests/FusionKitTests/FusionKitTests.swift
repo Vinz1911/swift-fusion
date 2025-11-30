@@ -61,27 +61,25 @@ extension FusionKitTests {
     private func performTransmission<T: FusionMessage>(message: T) async throws {
         guard let channel else { throw FusionChannelError.establishmentFailed }
         try await channel.start()
-        let task = Task {
-            for try await result in channel.receive() {
-                guard case .message(let messages) = result else { continue }
-                if message is String {
-                    guard let messages = messages as? Data else { continue }
-                    print("🟣 Received Data: \(messages.count)")
-                    #expect(messages.count == Int(message as! String))
-                }
-                if message is Data {
-                    guard let messages = messages as? String else { continue }
-                    print("🟣 Received String: \(messages)")
-                    #expect(messages == "\((message as! Data).count)")
-                }
-                if message is UInt16 {
-                    guard let messages = messages as? UInt16 else { continue }
-                    print("🟣 Received UInt16: \(messages)")
-                    #expect(messages == message as! UInt16)
-                }
-                await channel.cancel()
+        await channel.receive() { result in
+            guard case .message(let messages) = result else { return }
+            if message is String {
+                guard let messages = messages as? Data else { return }
+                print("🟣 Received Data: \(messages.count)")
+                #expect(messages.count == Int(message as! String))
             }
+            if message is Data {
+                guard let messages = messages as? String else { return }
+                print("🟣 Received String: \(messages)")
+                #expect(messages == "\((message as! Data).count)")
+            }
+            if message is UInt16 {
+                guard let messages = messages as? UInt16 else { return }
+                print("🟣 Received UInt16: \(messages)")
+                #expect(messages == message as! UInt16)
+            }
+            await channel.cancel()
         }
-        try await channel.send(message: message); try await task.value
+        try await channel.send(message: message)
     }
 }

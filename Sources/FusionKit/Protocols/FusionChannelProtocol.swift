@@ -38,5 +38,5 @@ public protocol FusionChannelProtocol: Sendable {
     /// Receive messages over the established channel
     ///
     /// - Returns: the iteratable `AsyncThrowingStream` contains `FusionResult`
-    nonisolated func receive() -> AsyncThrowingStream<FusionResult, Error>
+    func receive(_ completion: @Sendable @escaping (FusionResult) async throws -> Void) async -> Void
 }

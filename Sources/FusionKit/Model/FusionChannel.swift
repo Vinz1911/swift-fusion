@@ -9,8 +9,8 @@
 import Foundation
 import Network
 
-public actor FusionChannel: FusionChannelProtocol, Sendable {    
-    private let stream = AsyncThrowingStream.makeStream(of: FusionResult.self)
+public actor FusionChannel: FusionChannelProtocol, Sendable {
+    private var transmitter: @Sendable (FusionResult) async throws -> Void = { _ in }
     private let framer = FusionFramer()
     
     private var parameters: FusionParameters
@@ -46,8 +46,7 @@ public actor FusionChannel: FusionChannelProtocol, Sendable {
     ///
     /// Stops the receiver and cancels the current channel
     public func cancel() async -> Void {
-        if let process { process.cancel() }
-        stream.continuation.finish(); channel = nil
+        if let process { process.cancel() }; channel = nil
     }
     
     /// Send messages over the established channel
@@ -60,8 +59,8 @@ public actor FusionChannel: FusionChannelProtocol, Sendable {
     /// Receive messages over the established channel
     ///
     /// - Returns: the iteratable `AsyncThrowingStream` contains `FusionResult`
-    public nonisolated func receive() -> AsyncThrowingStream<FusionResult, Error> {
-        return stream.stream
+    public func receive(_ completion: @Sendable @escaping (FusionResult) async throws -> Void) async -> Void {
+        transmitter = { try await completion($0) }
     }
 }
 
@@ -87,7 +86,7 @@ private extension FusionChannel {
         guard let channel else { return }
         let frame = try framer.create(message: message)
         for chunk in frame.chunks(of: parameters.leverage) {
-            stream.continuation.yield(.report(.init(outbound: chunk.count)))
+            try await transmitter(.report(.init(outbound: chunk.count)))
             try await channel.send(chunk)
         }
     }
@@ -100,13 +99,12 @@ private extension FusionChannel {
             while !Task.isCancelled {
                 guard let channel else { return }
                 let (data, _) = try await channel.receive(atLeast: .minimum, atMost: parameters.leverage.rawValue)
-                stream.continuation.yield(.report(.init(inbound: data.count)))
+                try await transmitter(.report(.init(inbound: data.count)))
                 let messages = try await self.framer.parse(data: data)
-                for message in messages { stream.continuation.yield(.message(message)) }
+                for message in messages { try await transmitter(.message(message)) }
             }
-            stream.continuation.finish()
         } catch {
-            stream.continuation.finish(throwing: error)
+            try? await transmitter(.failure(error))
         }
     }
 }
