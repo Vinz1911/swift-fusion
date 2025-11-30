@@ -23,9 +23,9 @@ dependencies: [
 ```
 
 > [!IMPORTANT]  
-> The entire framework was rewritten with the support for Swift 6.2 and iOS 26.
-> It uses the new concurrency based API internally and it also exposes a new public API.
-> Use version > 20.0.0 for the new API and below for the old one.
+> With the beginning of version 20.0.0 the framework uses an entire new private and public interface.
+> The Framework was migrated to use the new structured concurrency based API for safe and easy handling.
+> Below version 20.0.0 can be used for 'old' API interface but will not be actively maintained anymore.
 
 ## Import:
 ```swift
