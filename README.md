@@ -1,13 +1,13 @@
 # FusionKit
-
-`FusionKit` is a library which implements the `Fusion Framing Protocol (FFP)`. 
-The `Fusion Framing Protocol (FFP)` is proprietary networking protocol which uses a small and lightweight header with a performance as fast as raw tcp performance. Built directly on top of Apples `Network.framework` with support for plain tcp and tls encrypted connections. The implementation for the host is [Fusion](https://github.com/Vinz1911/fusion) written in golang with awesome concurrency support to ensure maximum performance.
+The `FusionChannel` is a custom network connector that implements the **Fusion Framing Protocol (FFP)**
+It is built on top of the standard `Network` framework library. This fast and lightweight custom framing protocol 
+enables high-speed data transmission and provides fine-grained control over network flow.
 
 # Overview
 | Swift Version                                                                                                | License                                                                                                                                              | Coverage                                                                                                                                              |
 |--------------------------------------------------------------------------------------------------------------|------------------------------------------------------------------------------------------------------------------------------------------------------|-------------------------------------------------------------------------------------------------------------------------------------------------------|
-| [![Swift 6.0](https://img.shields.io/badge/Swift-6.0-orange.svg?logo=swift&style=flat)](https://swift.org)   | [![License](https://img.shields.io/badge/license-GPLv3-blue.svg?longCache=true&style=flat)](https://github.com/Vinz1911/FusionKit/blob/main/LICENSE) | [![codecov](https://codecov.io/github/Vinz1911/FusionKit/branch/main/graph/badge.svg?token=EE3S0BOINS)](https://codecov.io/github/Vinz1911/FusionKit) |
-| [![Swift 6.0](https://img.shields.io/badge/SPM-Support-orange.svg?logo=swift&style=flat)](https://swift.org) |                                                                                                                                                      |                                                                                                                                                       |
+| [![Swift 6.2](https://img.shields.io/badge/Swift-6.2-orange.svg?logo=swift&style=flat)](https://swift.org)   | [![License](https://img.shields.io/badge/license-GPLv3-blue.svg?longCache=true&style=flat)](https://github.com/Vinz1911/FusionKit/blob/main/LICENSE) | [![codecov](https://codecov.io/github/Vinz1911/FusionKit/branch/main/graph/badge.svg?token=EE3S0BOINS)](https://codecov.io/github/Vinz1911/FusionKit) |
+| [![Swift 6.2](https://img.shields.io/badge/SPM-Support-orange.svg?logo=swift&style=flat)](https://swift.org) |                                                                                                                                                      |                                                                                                                                                       |
 
 ## Installation:
 ### Swift Packages
@@ -17,95 +17,74 @@ The `Fusion Framing Protocol (FFP)` is proprietary networking protocol which use
 // ...
 dependencies: [
     // Dependencies declare other packages that this package depends on.
-    .package(url: "https://github.com/Vinz1911/FusionKit.git", from: .init(stringLiteral: "12.0.0")),
+    .package(url: "https://github.com/Vinz1911/FusionKit.git", from: .init(stringLiteral: "20.0.0")),
 ],
 // ...
 ```
 
+> [!IMPORTANT]  
+> The entire framework was rewritten with the support for Swift 6.2 and iOS 26.
+> It uses the new concurrency based API internally and it also exposes a new public API.
+> Use version > 20.0.0 for the new API and below for the old one.
+
 ## Import:
 ```swift
-// import the Framework
+// Import the Framework
 import FusionKit
 
-// create a new connection
-let connection = FusionConnection(host: "example.com", port: 7878)
+// Create a new channel
+let channel = try FusionChannel(host: "example.com", port: 7878)
 
-// support for NWParameters, tls example:
-let connection = FusionConnection(host: "example.com", port: 7878, parameters: .tls)
+// Support for NWProtocolTCP.Options, tls example:
+let channel = try FusionChannel(host: "example.com", port: 7878, parameters: .init(tcp: .init()))
 
 // ...
 ```
 
-## State Handler:
-```swift
-// import the Framework
-import FusionKit
-
-// create a new connection
-let connection = FusionConnection(host: "example.com", port: 7878)
-
-// state update handler
-connection.stateUpdateHandler = { state in
-    switch state {
-    case .ready:
-        // connection is ready
-    case .cancelled:
-        // connection is cancelled
-    case .failed(let error):
-        // connection failed with error
-    }
-}
-
-// start connection
-connection.start()
-```
-
 ## Send Messages:
 ```swift
-// import the Framework
+// Import the Framework
 import FusionKit
 
-// create a new connection
-let connection = FusionConnection(host: "example.com", port: 7878)
+// Create a new channel
+let channel = try FusionChannel(host: "example.com", port: 7878)
 
-// the framework accepts generic data types
-// send strings
-connection.send(message: "Hello World!")
+// The framework accepts different kind of messages
+// `String` for text based messages
+// `Data` for raw byte messages
+// `UInt16` for ping - pong messages (generates a data frame based on input value)
 
-// send data
-connection.send(message: Data(count: 100))
+// Send String
+try await connection.send(message: "Hello World!")
 
-// send ping
-connection.send(message: UInt16.max)
+// Send Data
+try await connection.send(message: Data(count: 100))
+
+// Send UInt16
+try await connection.send(message: UInt16.max)
 ```
 
 ## Parse Message:
 ```swift
-// import the Framework
+// Import the Framework
 import FusionKit
 
-// create a new connection
-let connection = FusionConnection(host: "example.com", port: 7878)
+// Create a new channel
+let channel = try FusionChannel(host: "example.com", port: 7878)
 
-// read incoming messages and transmitted bytes count
-connection.receive { message, bytes in    
-    // Data Message
-    if case let message as Data = message { }
-    
-    // String Message
-    if case let message as String = message { }
-    
-    // UInt16 Message
-    if case let message as UInt16 = message { }
-    
-    // Input Bytes
-    if let input = bytes.input { }
-    
-    // Output Bytes
-    if let output = bytes.output { }
+// Send message
+try await connection.send(message: "Hello World! 👻")
+
+// Receive message and get report
+for try await result in channel.receive() {
+    if case .message(let message) = result {
+        if let message = message as? String { print(message) }
+    }
+    if case .report(let report) = result {
+        if let inbound = report.inbound { print("Incoming bytes: \(inbound)") }
+        if let outbound = report.outbound { print("Outgoing bytes: \(outbound)") }
+    }
 }
-
-connection.send(message: "Hello World! 👻")
 ```
 
 ## Author:

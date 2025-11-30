@@ -85,7 +85,7 @@ private extension FusionChannel {
     /// - Parameter message: the message conform to `FusionMessage`
     private func processing<T: FusionMessage>(with message: T) async throws -> Void {
         guard let channel else { return }
-        let frame = try await framer.create(message: message)
+        let frame = try framer.create(message: message)
         for chunk in frame.chunks(of: parameters.leverage) {
             stream.continuation.yield(.report(.init(outbound: chunk.count)))
             try await channel.send(chunk)

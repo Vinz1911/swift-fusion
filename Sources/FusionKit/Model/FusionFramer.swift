@@ -22,7 +22,7 @@ internal final actor FusionFramer: FusionFramerProtocol, Sendable {
     ///
     /// - Parameter message: generic type which conforms to `FusionMessage`
     /// - Returns: the message frame as `Data`
-    internal func create<T: FusionMessage>(message: T) async throws -> Data {
+    internal nonisolated func create<T: FusionMessage>(message: T) throws -> Data {
         let total = message.raw.count + FusionConstants.header.rawValue
         guard total <= FusionConstants.frame.rawValue else { throw FusionFramerError.writeBufferOverflow }
         

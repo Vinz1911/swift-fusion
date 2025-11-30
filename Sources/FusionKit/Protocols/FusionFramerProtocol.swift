@@ -41,7 +41,7 @@ internal protocol FusionFramerProtocol: Sendable {
     ///
     /// - Parameter message: generic type which conforms to `FusionMessage`
     /// - Returns: the message frame as `Data`
-    func create<T: FusionMessage>(message: T) async throws -> Data
+    nonisolated func create<T: FusionMessage>(message: T) throws -> Data
     
     /// Parse a `FusionMessage` conform frame
     ///

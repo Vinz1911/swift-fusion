@@ -13,7 +13,7 @@ import Network
 
 @Suite("FusionKit Tests")
 struct FusionKitTests {
-    let connection = try? FusionChannel(host: "de0.weist.org", port: 7878)
+    let channel = try? FusionChannel(host: "de0.weist.org", port: 7878)
     
     /// Send `String` message
     @Test("Send String") func sendString() async throws {
@@ -39,9 +39,9 @@ struct FusionKitTests {
         created.append(Data(count: 16384))
         created.append(UInt16.max)
         
-        frames.append(try await framer.create(message: created[0]))
-        frames.append(try await framer.create(message: created[1]))
-        frames.append(try await framer.create(message: created[2]))
+        frames.append(try framer.create(message: created[0]))
+        frames.append(try framer.create(message: created[1]))
+        frames.append(try framer.create(message: created[2]))
         
         let messages = try await framer.parse(data: frames)
         for message in messages { parsed.append(message) }
@@ -59,10 +59,10 @@ extension FusionKitTests {
     ///
     /// - Parameter message: message that conforms to `FusionMessage`
     private func performTransmission<T: FusionMessage>(message: T) async throws {
-        guard let connection else { throw FusionChannelError.establishmentFailed }
-        try await connection.start()
+        guard let channel else { throw FusionChannelError.establishmentFailed }
+        try await channel.start()
         let task = Task {
-            for try await result in connection.receive() {
+            for try await result in channel.receive() {
                 guard case .message(let messages) = result else { continue }
                 if message is String {
                     guard let messages = messages as? Data else { continue }
@@ -79,9 +79,9 @@ extension FusionKitTests {
                     print("🟣 Received UInt16: \(messages)")
                     #expect(messages == message as! UInt16)
                 }
-                await connection.cancel()
+                await channel.cancel()
             }
         }
-        try await connection.send(message: message); try await task.value
+        try await channel.send(message: message); try await task.value
     }
 }
