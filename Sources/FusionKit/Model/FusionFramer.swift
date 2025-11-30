@@ -8,7 +8,7 @@
 
 import Foundation
 
-internal final actor FusionFramer: FusionFramerProtocol, Sendable {
+internal actor FusionFramer: FusionFramerProtocol, Sendable {
     private var buffer: Data = .init()
     
     /// Clear the message buffer
@@ -51,7 +51,7 @@ internal final actor FusionFramer: FusionFramerProtocol, Sendable {
             case FusionOpcodes.text.rawValue: messages.append(String(bytes: payload, encoding: .utf8) ?? .init())
             default: throw FusionFramerError.unexpectedOpcode }
             
-            if buffer.count >= length { buffer = buffer.subdata(in: .init(length)..<buffer.count) };
+            if buffer.count >= length { buffer = buffer.subdata(in: .init(length)..<buffer.count) }
             if let extracted = buffer.extractLength() { length = extracted }
         }
         return messages
