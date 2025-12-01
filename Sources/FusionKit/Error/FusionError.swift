@@ -13,9 +13,7 @@ import Foundation
 /// The `FusionChannelError` specific errors
 @frozen
 public enum FusionChannelError: Error, Sendable {
-    case invalidEndpoint
     case channelTimeout
-    case unsupportedProtocol
     case establishmentFailed
     case alreadyEstablished
     
@@ -23,9 +21,7 @@ public enum FusionChannelError: Error, Sendable {
         switch self {
         case .alreadyEstablished: return "the channel is already established"
         case .establishmentFailed: return "the channel was unable to be established, please check the underlying reason"
-        case .invalidEndpoint: return "the host name or port number is invalid, failed to create instance"
-        case .channelTimeout: return "channel run into timeout, failed to establish channel"
-        case .unsupportedProtocol: return "protocol is unsupported, use .tcp or .tls instead" }
+        case .channelTimeout: return "channel run into timeout, failed to establish channel" }
     }
 }
 

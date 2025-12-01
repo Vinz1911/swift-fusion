@@ -15,10 +15,9 @@ public protocol FusionChannelProtocol: Sendable {
     /// enables high-speed data transmission and provides fine-grained control over network flow.
     ///
     /// - Parameters:
-    ///   - host: the host name as `String`
-    ///   - port: the host port as `UInt16`
+    ///   - host: the connected `NWEndpoint`
     ///   - parameters: network framework `FusionParameters`
-    init(host: String, port: UInt16, parameters: FusionParameters) throws
+    init(using endpoint: NWEndpoint, parameters: FusionParameters)
     
     /// Start to establish a new channel
     ///
@@ -38,5 +37,5 @@ public protocol FusionChannelProtocol: Sendable {
     /// Receive messages over the established channel
     ///
     /// - Returns: the iteratable `AsyncThrowingStream` contains `FusionResult`
-    func receive(_ completion: @Sendable @escaping (FusionResult) async throws -> Void) async -> Void
+    nonisolated func receive() -> AsyncThrowingStream<FusionResult, Error>
 }

@@ -14,7 +14,6 @@ import Foundation
 @frozen
 public enum FusionResult: Sendable {
     case ready
-    case failure(Error)
     case message(FusionMessage)
     case report(FusionReport)
 }

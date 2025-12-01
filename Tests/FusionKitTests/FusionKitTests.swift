@@ -13,7 +13,7 @@ import Network
 
 @Suite("FusionKit Tests")
 struct FusionKitTests {
-    let channel = try? FusionChannel(host: "de0.weist.org", port: 7878)
+    let channel = FusionChannel(using: .hostPort(host: "de0.weist.org", port: 7878))
     
     /// Send `String` message
     @Test("Send String") func sendString() async throws {
@@ -46,9 +46,9 @@ struct FusionKitTests {
         let messages = try await framer.parse(data: frames)
         for message in messages { parsed.append(message) }
         
-        if let create = created[0] as? String, let parse = parsed[0] as? String { print("🟣 Created String: \(create), Parsed String: \(parse)"); #expect(create == parse) }
-        if let create = created[1] as? Data, let parse = parsed[1] as? Data { print("🟣 Created Data: \(create.count), Parsed Data: \(parse.count)"); #expect(create == parse) }
-        if let create = created[2] as? UInt16, let parse = parsed[2] as? UInt16 { print("🟣 Created UInt16: \(create), Parsed UInt16: \(parse)"); #expect(create == parse) }
+        if let create = created[0] as? String, let parse = parsed[0] as? String { print("\(create) == \(parse)"); #expect(create == parse) }
+        if let create = created[1] as? Data, let parse = parsed[1] as? Data { print("\(create.count) == \(parse.count)"); #expect(create == parse) }
+        if let create = created[2] as? UInt16, let parse = parsed[2] as? UInt16 { print("\(create) == \(parse)"); #expect(create == parse) }
     }
 }
 
@@ -59,27 +59,26 @@ extension FusionKitTests {
     ///
     /// - Parameter message: message that conforms to `FusionMessage`
     private func performTransmission<T: FusionMessage>(message: T) async throws {
-        guard let channel else { throw FusionChannelError.establishmentFailed }
         try await channel.start()
-        await channel.receive() { result in
-            guard case .message(let messages) = result else { return }
+        try await channel.send(message: message)
+        for try await result in channel.receive() {
+            guard case .message(let messages) = result else { continue }
             if message is String {
-                guard let messages = messages as? Data else { return }
-                print("🟣 Received Data: \(messages.count)")
+                guard let messages = messages as? Data else { continue }
+                print("Received Data: \(messages.count)")
                 #expect(messages.count == Int(message as! String))
             }
             if message is Data {
-                guard let messages = messages as? String else { return }
-                print("🟣 Received String: \(messages)")
+                guard let messages = messages as? String else { continue }
+                print("Received String: \(messages)")
                 #expect(messages == "\((message as! Data).count)")
             }
             if message is UInt16 {
-                guard let messages = messages as? UInt16 else { return }
-                print("🟣 Received UInt16: \(messages)")
+                guard let messages = messages as? UInt16 else { continue }
+                print("Received UInt16: \(messages)")
                 #expect(messages == message as! UInt16)
             }
             await channel.cancel()
         }
-        try await channel.send(message: message)
     }
 }

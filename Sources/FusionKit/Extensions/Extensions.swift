@@ -34,6 +34,21 @@ internal extension Duration {
     static var timeout: Self { .seconds(4.0) }
 }
 
+// MARK: - Network -
+
+extension NetworkConnection {
+    /// Validate channel establishment
+    ///
+    /// Checks if channel was established otherwise throws error
+    func timeout() async throws -> Void {
+        let clock = ContinuousClock(), deadline = clock.now + .timeout
+        while !Task.isCancelled {
+            switch self.state { case .ready: return case .failed(let error), .waiting(let error): throw error default: break }
+            guard clock.now < deadline else { throw FusionChannelError.channelTimeout }; try await clock.sleep(for: .interval)
+        }
+    }
+}
+
 // MARK: - Data -
 
 internal extension Data {

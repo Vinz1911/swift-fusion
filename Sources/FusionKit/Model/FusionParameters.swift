@@ -24,7 +24,7 @@ public struct FusionParameters: FusionParametersProtocol, Sendable {
     ///   - tls: underlying channel specific `NWProtocolTLS.Options`
     ///   - priority: the `TaskPriority` for the channel
     ///   - leverage: receive channel leverage `FusionLeverage`
-    public init(tcp: NWProtocolTCP.Options = .init(), tls: NWProtocolTLS.Options? = nil, priority: TaskPriority = .high, leverage: FusionLeverage = .medium) {
+    public init(tcp: NWProtocolTCP.Options = .init(), tls: NWProtocolTLS.Options? = nil, priority: TaskPriority = .userInitiated, leverage: FusionLeverage = .medium) {
         self.tcp = tcp
         self.tls = tls
         self.priority = priority

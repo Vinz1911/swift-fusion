@@ -10,7 +10,7 @@ import Foundation
 import Network
 
 public actor FusionChannel: FusionChannelProtocol, Sendable {
-    private var transmitter: @Sendable (FusionResult) async throws -> Void = { _ in }
+    private let (stream, continuation) = AsyncThrowingStream.makeStream(of: FusionResult.self)
     private let framer = FusionFramer()
     
     private var parameters: FusionParameters
@@ -23,30 +23,29 @@ public actor FusionChannel: FusionChannelProtocol, Sendable {
     /// enables high-speed data transmission and provides fine-grained control over network flow.
     ///
     /// - Parameters:
-    ///   - host: the host name as `String`
-    ///   - port: the host port as `UInt16`
+    ///   - host: the connected `NWEndpoint`
     ///   - parameters: network framework `FusionParameters`
-    public init(host: String, port: UInt16, parameters: FusionParameters = .init()) throws {
-        if host.isEmpty || port == .zero { throw(FusionChannelError.invalidEndpoint) }
-        self.endpoint = .hostPort(host: .init(host), port: .init(integerLiteral: port))
+    public init(using endpoint: NWEndpoint, parameters: FusionParameters = .init()) {
+        self.endpoint = endpoint
         self.parameters = parameters
     }
     
     /// Start to establish a new channel
     ///
     /// Set config for `NetworkConnection` and establish new channel
-    public func start() async throws {
+    public func start() async throws -> Void {
         guard channel == nil else { channel = nil; throw FusionChannelError.alreadyEstablished}
         channel = NetworkConnection(to: endpoint, using: .parameters(initialParameters: .init(tls: parameters.tls, tcp: parameters.tcp)) { TCP() })
-        process = Task(priority: parameters.priority) { [weak self] in await self?.processing() }
-        try await established()
+        process = Task(priority: parameters.priority) { [weak self] in do { try await self?.processing() } catch { self?.continuation.finish(throwing: error) } }
+        try await channel?.timeout(); continuation.yield(.ready)
     }
     
     /// Cancel the current channel
     ///
     /// Stops the receiver and cancels the current channel
     public func cancel() async -> Void {
-        if let process { process.cancel() }; channel = nil
+        if let process { process.cancel() }
+        channel = nil; continuation.finish()
     }
     
     /// Send messages over the established channel
@@ -59,26 +58,14 @@ public actor FusionChannel: FusionChannelProtocol, Sendable {
     /// Receive messages over the established channel
     ///
     /// - Returns: the iteratable `AsyncThrowingStream` contains `FusionResult`
-    public func receive(_ completion: @Sendable @escaping (FusionResult) async throws -> Void) async -> Void {
-        transmitter = { try await completion($0) }
+    public nonisolated func receive() -> AsyncThrowingStream<FusionResult, Error> {
+        return stream
     }
 }
 
 // MARK: - Private API -
 
 private extension FusionChannel {
-    /// Validate channel establishment
-    ///
-    /// Checks if the channel was successful established
-    private func established() async throws -> Void {
-        let clock = ContinuousClock(), deadline = clock.now + .timeout
-        while !Task.isCancelled {
-            switch channel?.state { case .ready: return case .failed(let error), .waiting(let error): channel = nil; throw error default: break }
-            guard clock.now < deadline else { channel = nil; throw FusionChannelError.channelTimeout }
-            try await clock.sleep(for: .interval)
-        }
-    }
-    
     /// Create message frame with `FusionFramer` and send it over the channel
     ///
     /// - Parameter message: the message conform to `FusionMessage`
@@ -86,7 +73,7 @@ private extension FusionChannel {
         guard let channel else { return }
         let frame = try framer.create(message: message)
         for chunk in frame.chunks(of: parameters.leverage) {
-            try await transmitter(.report(.init(outbound: chunk.count)))
+            continuation.yield(.report(.init(outbound: chunk.count)))
             try await channel.send(chunk)
         }
     }
@@ -94,17 +81,13 @@ private extension FusionChannel {
     /// Receive message frames over the channel and parse it with `FusionFramer`
     ///
     /// Exposes the parsed `FusionMessage` and the `FusionReport`
-    private func processing() async -> Void {
-        do {
-            while !Task.isCancelled {
-                guard let channel else { return }
-                let (data, _) = try await channel.receive(atLeast: .minimum, atMost: parameters.leverage.rawValue)
-                try await transmitter(.report(.init(inbound: data.count)))
-                let messages = try await self.framer.parse(data: data)
-                for message in messages { try await transmitter(.message(message)) }
-            }
-        } catch {
-            try? await transmitter(.failure(error))
+    private func processing() async throws -> Void {
+        while !Task.isCancelled {
+            guard let channel else { return }
+            let (data, _) = try await channel.receive(atLeast: .minimum, atMost: parameters.leverage.rawValue)
+            continuation.yield(.report(.init(inbound: data.count)))
+            let messages = try await self.framer.parse(data: data)
+            for message in messages { continuation.yield(.message(message)) }
         }
     }
 }
