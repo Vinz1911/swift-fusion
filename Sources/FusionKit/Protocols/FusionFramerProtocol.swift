@@ -40,12 +40,12 @@ internal protocol FusionFramerProtocol: Sendable {
     /// Create a `FusionMessage` conform frame
     ///
     /// - Parameter message: generic type which conforms to `FusionMessage`
-    /// - Returns: the message frame as `Data`
-    func create<T: FusionMessage>(message: T) throws -> Data
+    /// - Returns: the result type as tuple `(Data, Error)`
+    func create<T: FusionMessage>(message: T) -> (Data, Error?)
     
     /// Parse a `FusionMessage` conform frame
     ///
     /// - Parameter data: the `DispatchData` which holds the `FusionMessage`
-    /// - Returns: a collection of `FusionMessage`s and `Error`
-    func parse(data: DispatchData) throws -> [FusionMessage]
+    /// - Returns: the result type as tuple `([FusionMessage], Error?)`
+    func parse(data: DispatchData) -> ([FusionMessage], Error?)
 }

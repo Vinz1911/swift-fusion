@@ -26,9 +26,22 @@ internal extension UInt32 {
 
 // MARK: - Double -
 
-internal extension Double {
+internal extension TimeInterval {
     /// Timeout time
     static var timeout: Self { 3.0 }
+}
+
+// MARK: - NWConnection -
+
+extension NWConnection {
+    /// Timeout for `NWConnection`
+    ///
+    /// - Parameters:
+    ///   - queue: current `DispatchQueue`
+    ///   - completion: called after timeout when not connected
+    func timeout(queue: DispatchQueue, _ completion: @Sendable @escaping () -> Void) {
+        queue.asyncAfter(deadline: .now() + .timeout) { if self.state != .ready { completion() } }
+    }
 }
 
 // MARK: - Data -

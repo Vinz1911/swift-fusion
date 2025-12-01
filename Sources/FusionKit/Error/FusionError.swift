@@ -8,24 +8,22 @@
 
 import Foundation
 
+// MARK: - Fusion Error -
+
+public protocol FusionError: Error, Sendable { }
+
 // MARK: - Fusion Channel Error -
 
 /// The `FusionChannelError` specific errors
 @frozen
-public enum FusionChannelError: Error, Sendable {
+public enum FusionChannelError: FusionError, Error, Sendable {
     case invalidEndpoint
     case channelTimeout
-    case unsupportedProtocol
-    case establishmentFailed
-    case alreadyEstablished
     
     public var description: String {
         switch self {
-        case .alreadyEstablished: return "the channel is already established"
-        case .establishmentFailed: return "the channel was unable to be established, please check the underlying reason"
         case .invalidEndpoint: return "the host name or port number is invalid, failed to create instance"
-        case .channelTimeout: return "channel run into timeout, failed to establish channel"
-        case .unsupportedProtocol: return "protocol is unsupported, use .tcp or .tls instead" }
+        case .channelTimeout: return "channel run into timeout, failed to establish channel" }
     }
 }
 
@@ -33,7 +31,7 @@ public enum FusionChannelError: Error, Sendable {
 
 /// The `FusionFramerError` specific errors
 @frozen
-public enum FusionFramerError: Error, Sendable {
+public enum FusionFramerError: FusionError, Error, Sendable {
     case parsingFailed
     case readBufferOverflow
     case writeBufferOverflow
