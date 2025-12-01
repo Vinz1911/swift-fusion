@@ -19,7 +19,7 @@ public protocol FusionChannelProtocol: Sendable {
     ///   - parameters: the configurable `FusionParameters`
     init(using endpoint: NWEndpoint, parameters: FusionParameters)
     
-    /// Start to establish a new channel
+    /// Start to establishing a new channel
     ///
     /// Establish a new `FusionChannel` to a compatible booststrap
     func start() -> Void
@@ -36,6 +36,6 @@ public protocol FusionChannelProtocol: Sendable {
     
     /// Receive a message from a connected bootstraped
     ///
-    /// - Parameter completion: contains `FusionResult` generic message typ
+    /// - Parameter operation: propagates generic `FusionResult`
     func receive(_ completion: @Sendable @escaping (FusionResult) -> Void) -> Void
 }

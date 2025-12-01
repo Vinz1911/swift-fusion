@@ -10,7 +10,7 @@ import Foundation
 import Network
 
 public final class FusionChannel: FusionChannelProtocol, @unchecked Sendable {
-    private var result: ResultBridge = { _ in }
+    private var result: FusionBridge = { _ in }
     private var timer: DispatchSourceTimer?
     
     private let queue: DispatchQueue
@@ -31,7 +31,7 @@ public final class FusionChannel: FusionChannelProtocol, @unchecked Sendable {
         self.leverage = parameters.leverage
     }
     
-    /// Start to establish a new channel
+    /// Start to establishing a new channel
     ///
     /// Establish a new `FusionChannel` to a compatible booststrap
     public func start() -> Void {
@@ -59,7 +59,7 @@ public final class FusionChannel: FusionChannelProtocol, @unchecked Sendable {
     
     /// Receive a message from a connected bootstraped
     ///
-    /// - Parameter completion: contains `FusionResult` generic message typ
+    /// - Parameter operation: propagates generic `FusionResult`
     public func receive(_ operation: @Sendable @escaping (FusionResult) -> Void) -> Void {
         result = { [weak self] result in if case .failed = result { self?.channel.cancel(); self?.framer.reset() }; operation(result) }
     }

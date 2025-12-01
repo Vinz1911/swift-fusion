@@ -42,9 +42,9 @@ private extension FusionKitTests {
             if case .ready = result { channel.send(message: message) }
             if case .failed(let error) = result { XCTFail("failed with error: \(error)")}
             if case .message(let message) = result {
-                if case let message as UInt16 = message { XCTAssertEqual(message, UInt16(16384)); print("🟣 UInt16: \(message)"); channel.cancel(); exp.fulfill() }
-                if case let message as Data = message { XCTAssertEqual(message.count, Int(16384)); print("🟣 Data: \(message)"); channel.cancel(); exp.fulfill() }
-                if case let message as String = message { XCTAssertEqual(message, "16384"); print("🟣 String: \(message)"); channel.cancel(); exp.fulfill() }
+                if case let message as UInt16 = message { XCTAssertEqual(message, UInt16(16384)); print("UInt16: \(message)"); channel.cancel(); exp.fulfill() }
+                if case let message as Data = message { XCTAssertEqual(message.count, Int(16384)); print("Data: \(message)"); channel.cancel(); exp.fulfill() }
+                if case let message as String = message { XCTAssertEqual(message, "16384"); print("String: \(message)"); channel.cancel(); exp.fulfill() }
             }
         }
         channel.start(); wait(for: [exp], timeout: 7.5)
@@ -68,9 +68,9 @@ private extension FusionKitTests {
         if let error { XCTFail("Failed with: \(error)") }
         
         for message in parser {
-            if case let message as String = message { XCTAssertEqual(messages[0] as! String, message); print("🟣 \(messages[0]) == \(message)") }
-            if case let message as Data = message { XCTAssertEqual(messages[1] as! Data, message); print("🟣 \(messages[1]) == \(message)") }
-            if case let message as UInt16 = message { XCTAssertEqual(messages[2] as! UInt16, message); print("🟣 \(messages[2]) == \(message)") }
+            if case let message as String = message { XCTAssertEqual(messages[0] as! String, message); print("\(messages[0]) == \(message)") }
+            if case let message as Data = message { XCTAssertEqual(messages[1] as! Data, message); print("\(messages[1]) == \(message)") }
+            if case let message as UInt16 = message { XCTAssertEqual(messages[2] as! UInt16, message); print("\(messages[2]) == \(message)") }
         }
     }
 }

@@ -10,7 +10,7 @@ import Foundation
 
 // MARK: - Typealias -
 
-internal typealias ResultBridge = @Sendable (FusionResult) -> Void
+internal typealias FusionBridge = @Sendable (FusionResult) -> Void
 
 // MARK: - Fusion Result -
 
