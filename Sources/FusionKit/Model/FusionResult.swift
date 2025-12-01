@@ -18,9 +18,9 @@ internal typealias ResultBridge = @Sendable (FusionResult) -> Void
 @frozen
 public enum FusionResult: Sendable {
     case ready
-    case failed(Error)
     case message(FusionMessage)
     case report(FusionReport)
+    case failed(Error)
 }
 
 // MARK: - Transfer Report -
