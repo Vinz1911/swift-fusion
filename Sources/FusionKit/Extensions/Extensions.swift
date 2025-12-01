@@ -39,7 +39,8 @@ extension NWConnection {
     /// - Parameters:
     ///   - queue: current `DispatchQueue`
     ///   - completion: called after timeout when not connected
-    func timeout(queue: DispatchQueue, _ completion: @Sendable @escaping () -> Void) {
+    func timeout(_ completion: @Sendable @escaping () -> Void) {
+        guard let queue = self.queue else { return }
         queue.asyncAfter(deadline: .now() + .timeout) { if self.state != .ready { completion() } }
     }
 }

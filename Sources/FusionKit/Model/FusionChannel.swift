@@ -39,8 +39,8 @@ public final class FusionChannel: FusionChannelProtocol, @unchecked Sendable {
             if case .ready = state { self?.result(.ready) }
             if case .failed(let error) = state { self?.result(.failed(error)) }
         }
-        receiveMessage(); channel.start(queue: queue)
-        channel.timeout(queue: queue) { [weak self] in self?.result(.failed(FusionChannelError.channelTimeout)) }
+        processing(); channel.start(queue: queue)
+        channel.timeout { [weak self] in self?.result(.failed(FusionChannelError.channelTimeout)) }
     }
     
     /// Cancel an active channel
@@ -54,7 +54,7 @@ public final class FusionChannel: FusionChannelProtocol, @unchecked Sendable {
     ///
     /// - Parameter message: generic type which conforms to `FusionMessage`
     public func send<T: FusionMessage>(message: T) -> Void {
-        queue.async { [weak self] in self?.sendMessage(with: message) }
+        queue.async { [weak self] in self?.processing(with: message) }
     }
     
     /// Receive a message from a connected bootstraped
@@ -71,7 +71,7 @@ private extension FusionChannel {
     /// Send `Data` from a created generic `FusionMessage`
     ///
     /// - Parameter content: the generic `FusionMessage` to send
-    private func sendMessage<T: FusionMessage>(with message: T) -> Void {
+    private func processing<T: FusionMessage>(with message: T) -> Void {
         channel.batch {
             let (frame, error) = framer.create(message: message); if let error { self.result(.failed(error)); return }
             for chunk in frame.chunks(of: leverage) {
@@ -86,7 +86,7 @@ private extension FusionChannel {
     /// Receive `Data` and parse it into a generic `FusionMessage`
     ///
     /// The parsed `FusionMessage` from the current established `FusionChannel`
-    private func receiveMessage() -> Void {
+    private func processing() -> Void {
         channel.batch {
             channel.receiveDiscontiguous(minimumIncompleteLength: .minimum, maximumLength: leverage.rawValue) { [weak self] content, _, isComplete, error in
                 if let error { if error != NWError.posix(.ECANCELED) { self?.result(.failed(error)) }; return }
@@ -96,7 +96,7 @@ private extension FusionChannel {
                     if let error { self?.result(.failed(error)) }
                     for message in messages { self?.result(.message(message)) }
                 }
-                if isComplete { self?.channel.cancel(); self?.framer.reset() } else { self?.receiveMessage() }
+                if isComplete { self?.channel.cancel(); self?.framer.reset() } else { self?.processing() }
             }
         }
     }
