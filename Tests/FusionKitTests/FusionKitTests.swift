@@ -33,22 +33,18 @@ struct FusionKitTests {
     /// Create + parse with `FusionFramer`
     @Test("Parse Message") func parseMessage() async throws {
         let framer = FusionFramer(); var frames: Data = .init()
-        var created: [FusionMessage] = .init(), parsed: [FusionMessage] = .init()
+        let messages: [FusionMessage] = ["Hello World! 🌍", Data(count: 16384), UInt16.max]
+        var parsed: [FusionMessage] = .init()
         
-        created.append("Hello World! 🌍")
-        created.append(Data(count: 16384))
-        created.append(UInt16.max)
+        frames.append(try framer.create(message: messages[0]))
+        frames.append(try framer.create(message: messages[1]))
+        frames.append(try framer.create(message: messages[2]))
         
-        frames.append(try framer.create(message: created[0]))
-        frames.append(try framer.create(message: created[1]))
-        frames.append(try framer.create(message: created[2]))
+        for message in try await framer.parse(data: frames) { parsed.append(message) }
         
-        let messages = try await framer.parse(data: frames)
-        for message in messages { parsed.append(message) }
-        
-        if let create = created[0] as? String, let parse = parsed[0] as? String { print("\(create) == \(parse)"); #expect(create == parse) }
-        if let create = created[1] as? Data, let parse = parsed[1] as? Data { print("\(create.count) == \(parse.count)"); #expect(create == parse) }
-        if let create = created[2] as? UInt16, let parse = parsed[2] as? UInt16 { print("\(create) == \(parse)"); #expect(create == parse) }
+        if let message = messages[0] as? String, let parse = parsed[0] as? String { print("\(message) == \(parse)"); #expect(message == parse) }
+        if let message = messages[1] as? Data, let parse = parsed[1] as? Data { print("\(message.count) == \(parse.count)"); #expect(message == parse) }
+        if let message = messages[2] as? UInt16, let parse = parsed[2] as? UInt16 { print("\(message) == \(parse)"); #expect(message == parse) }
     }
 }
 
