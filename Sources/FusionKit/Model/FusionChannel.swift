@@ -37,7 +37,7 @@ public actor FusionChannel: FusionChannelProtocol, Sendable {
         guard channel == nil else { channel = nil; throw FusionChannelError.alreadyEstablished}
         channel = NetworkConnection(to: endpoint, using: .parameters(initialParameters: .init(tls: parameters.tls, tcp: parameters.tcp)) { TCP() })
         process = Task(priority: parameters.priority) { [weak self] in do { try await self?.processing() } catch { self?.continuation.finish(throwing: error) } }
-        try await channel?.timeout(); continuation.yield(.ready)
+        try await channel?.timeout()
     }
     
     /// Cancel the current channel
