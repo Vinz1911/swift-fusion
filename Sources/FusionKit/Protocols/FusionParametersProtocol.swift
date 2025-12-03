@@ -9,11 +9,11 @@ import Foundation
 import Network
 
 public protocol FusionParametersProtocol: Sendable {
-    /// underlying channel specific `NWProtocolTCP.Options`
-    var tcp: NWProtocolTCP.Options { get set }
-    
     /// underlying channel specific `NWProtocolTLS.Options`
     var tls: NWProtocolTLS.Options? { get set }
+    
+    /// underlying channel specific `NWProtocolTCP.Options`
+    var tcp: NWProtocolTCP.Options { get set }
     
     /// the `TaskPriority` for the channel
     var priority: TaskPriority { get set }
@@ -24,9 +24,10 @@ public protocol FusionParametersProtocol: Sendable {
     /// The configurable `FusionParameters`
     ///
     /// - Parameters:
-    ///   - tcp: underlying channel specific `NWProtocolTCP.Options`
-    ///   - tls: underlying channel specific `NWProtocolTLS.Options`
+    ///   - tls: the underlying channel specific `NWProtocolTLS.Options`
+    ///   - tcp: the underlying channel specific `NWProtocolTCP.Options`
+    ///   - service: the `NWParameters.ServiceClass`
     ///   - priority: the `TaskPriority` for the channel
     ///   - leverage: receive channel leverage `FusionLeverage`
-    init(tcp: NWProtocolTCP.Options, tls: NWProtocolTLS.Options?, priority: TaskPriority, leverage: FusionLeverage)
+    init(tls: NWProtocolTLS.Options?, tcp: NWProtocolTCP.Options, service: NWParameters.ServiceClass, priority: TaskPriority, leverage: FusionLeverage)
 }

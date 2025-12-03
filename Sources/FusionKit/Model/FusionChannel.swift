@@ -35,9 +35,10 @@ public actor FusionChannel: FusionChannelProtocol, Sendable {
     /// Set config for `NetworkConnection` and establish new channel
     public func start() async throws -> Void {
         guard channel == nil else { channel = nil; throw FusionChannelError.alreadyEstablished}
-        channel = NetworkConnection(to: endpoint, using: .parameters(initialParameters: .init(tls: parameters.tls, tcp: parameters.tcp)) { TCP() })
+        let parameter = NWParameters(tls: parameters.tls, tcp: parameters.tcp, serviceClass: parameters.service)
+        channel = NetworkConnection(to: endpoint, using: .parameters(initialParameters: parameter) { TCP() })
         process = Task(priority: parameters.priority) { [weak self] in do { try await self?.processing() } catch { self?.continuation.finish(throwing: error) } }
-        try await channel?.timeout()
+        if let channel { try await channel.timeout() }
     }
     
     /// Cancel the current channel
@@ -84,7 +85,7 @@ private extension FusionChannel {
     private func processing() async throws -> Void {
         while !Task.isCancelled {
             guard let channel else { return }
-            let (data, _) = try await channel.receive(atLeast: .minimum, atMost: parameters.leverage.rawValue)
+            let (data, _) = try await channel.receive(atMost: parameters.leverage.rawValue)
             continuation.yield(.report(.init(inbound: data.count)))
             let messages = try await self.framer.parse(data: data)
             for message in messages { continuation.yield(.message(message)) }

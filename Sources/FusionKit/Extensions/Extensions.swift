@@ -9,15 +9,7 @@
 import Foundation
 import Network
 
-// MARK: - Int -
-
-internal extension Int {
-    /// Minimum size for bytes control
-    static var minimum: Self { 0x1 }
-    
-    /// Maximum size for bytes control
-    static var maximum: Self { 0x8000 }
-}
+// MARK: - UInt32 -
 
 internal extension UInt32 {
     /// Convert integer to data with bigEndian
@@ -35,6 +27,19 @@ internal extension Duration {
 }
 
 // MARK: - Network -
+
+extension NWParameters {
+    /// Creates a parameters object that is configured for TLS and TCP.
+    ///
+    /// - Parameters:
+    ///   - tls: TLS options or nil for no TLS
+    ///   - tcp: TCP options. Defaults to NWProtocolTCP.Options() with no options overridden.
+    ///   - serviceClass: ServiceClass. Default is best effort.
+    convenience init(tls: NWProtocolTLS.Options?, tcp: NWProtocolTCP.Options, serviceClass: NWParameters.ServiceClass = .bestEffort) {
+        self.init(tls: tls, tcp: tcp)
+        self.serviceClass = serviceClass
+    }
+}
 
 extension NetworkConnection {
     /// Validate channel establishment
@@ -56,7 +61,7 @@ internal extension Data {
     ///
     /// - Parameter leverage: the size of each chunk as `Int`
     func chunks(of leverage: FusionLeverage) -> [Data] {
-        let size: Int = Swift.min(leverage.rawValue, .maximum)
+        let size: Int = Swift.min(leverage.rawValue, Int(UInt16.max / 2))
         return stride(from: .zero, to: count, by: size).map { subdata(in: $0..<(count - $0 > size ? $0 + size : count)) }
     }
     

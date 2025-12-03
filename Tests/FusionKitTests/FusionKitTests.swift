@@ -17,17 +17,17 @@ struct FusionKitTests {
     
     /// Send `String` message
     @Test("Send String") func sendString() async throws {
-        try await performTransmission(message: "16384")
+        try await sendReceive(message: "16384")
     }
     
     /// Send `Data` message
     @Test("Send Data") func sendData() async throws {
-        try await performTransmission(message: Data(count: 16384))
+        try await sendReceive(message: Data(count: 16384))
     }
     
     /// Send `UInt16` message
     @Test("Send UInt") func sendUInt() async throws {
-        try await performTransmission(message: UInt16(16384))
+        try await sendReceive(message: UInt16(16384))
     }
     
     /// Create + parse with `FusionFramer`
@@ -54,7 +54,7 @@ extension FusionKitTests {
     /// Perform Send + Receive
     ///
     /// - Parameter message: message that conforms to `FusionMessage`
-    private func performTransmission<T: FusionMessage>(message: T) async throws {
+    private func sendReceive<T: FusionMessage>(message: T) async throws {
         try await channel.start()
         try await channel.send(message: message)
         for try await result in channel.receive() {
