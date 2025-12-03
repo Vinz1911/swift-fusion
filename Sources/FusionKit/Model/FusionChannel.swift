@@ -53,9 +53,10 @@ public actor FusionChannel: FusionChannelProtocol, Sendable {
     ///
     /// - Parameter message: the message conform to `FusionMessage`
     public func send<T: FusionMessage>(message: T) async -> Void {
-        Task(priority: parameters.priority) { @concurrent [weak self] in
+        let process = Task(priority: parameters.priority) { @concurrent [weak self] in
             do { try await self?.processing(with: message) } catch { self?.continuation.finish(throwing: error) }
         }
+        await process.value
     }
     
     /// Receive messages over the established channel
