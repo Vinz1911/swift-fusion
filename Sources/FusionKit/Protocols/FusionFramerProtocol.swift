@@ -45,7 +45,7 @@ internal protocol FusionFramerProtocol: Sendable {
     
     /// Parse a `FusionMessage` conform frame
     ///
-    /// - Parameter data: the `Data` which holds the `FusionMessage`
+    /// - Parameter data: the `Data` slice of the `FusionMessage`
     /// - Returns: a collection of `FusionMessage`s and `Error`
     func parse(data: Data) async throws -> [FusionMessage]
 }

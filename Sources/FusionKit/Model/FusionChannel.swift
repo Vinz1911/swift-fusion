@@ -10,8 +10,8 @@ import Foundation
 import Network
 
 public actor FusionChannel: FusionChannelProtocol, Sendable {
-    private let (stream, continuation) = AsyncThrowingStream.makeStream(of: FusionResult.self)
     private let framer = FusionFramer()
+    private let (stream, continuation) = FusionStream.makeStream()
     
     private var parameters: FusionParameters
     private var endpoint: NWEndpoint

@@ -8,6 +8,10 @@
 
 import Foundation
 
+// MARK: - Typealias
+
+internal typealias FusionStream = AsyncThrowingStream<FusionResult, Error>
+
 // MARK: - Result Type -
 
 /// The `FusionResult` internal message transmitter
