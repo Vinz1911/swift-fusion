@@ -11,25 +11,23 @@ import Foundation
 actor FusionFramer: FusionFramerProtocol {
     private var buffer: Data = .init()
 
-    /// Clear the `Data` buffer
+    /// Creates an instance of `FusionFramer`.
     ///
-    /// Current message buffer will be cleared
-    func reset() async -> Void {
-        buffer = .init()
-    }
+    /// The `FusionFramer` implements the **Fusion Framing Protocol (FFP)** —
+    /// a fast and lightweight message framing protocol that supports both
+    /// `ByteBuffer`- and `String`-based messages.
+    ///
+    /// - Parameter buffer: the initialize buffer as `Data`
+    init(buffer: Data = .init()) { self.buffer = buffer }
 
     /// Create a `FusionMessage` conform to the `FusionProtocol`
     ///
     /// - Parameter message: the `FusionMessage` conform to the `FusionProtocol`
     /// - Returns: the message frame as `Data`
     nonisolated func create<Message: FusionProtocol>(message: Message) throws -> Data {
-        let total = message.raw.count + FusionConstants.header.rawValue
+        let total = message.encode.count + FusionConstants.header.rawValue
         guard total <= FusionConstants.frame.rawValue else { throw FusionFramerError.writeBufferOverflow }
-
-        var frame = Data()
-        frame.append(message.opcode)
-        frame.append(UInt32(message.raw.count + FusionConstants.header.rawValue).endian)
-        frame.append(message.raw)
+        var frame = Data(); frame.append(message.opcode); frame.append(message.size); frame.append(message.encode)
         return frame
     }
 
@@ -38,21 +36,15 @@ actor FusionFramer: FusionFramerProtocol {
     /// - Parameter data: the `Data` slice of the `FusionMessage` conform to the `FusionProtocol`
     /// - Returns: a collection of `FusionMessage`s conform to the `FusionProtocol` and `Error`
     func parse(data: Data) async throws -> [FusionProtocol] {
-        var messages: [FusionProtocol] = []; buffer.append(data); guard var length = buffer.extractLength() else { return .init() }
+        var messages: [FusionProtocol] = []; buffer.append(data); guard var length = buffer.length() else { return .init() }
         guard buffer.count <= FusionConstants.frame.rawValue else { throw FusionFramerError.readBufferOverflow }
         guard buffer.count >= FusionConstants.header.rawValue, buffer.count >= length else { return .init() }
         while buffer.count >= length && length != .zero {
             guard let opcode = buffer.first else { throw FusionFramerError.parsingFailed }
-            guard let payload = buffer.extractPayload(length: length) else { throw FusionFramerError.parsingFailed }
-
-            switch opcode {
-            case FusionOpcodes.binary.rawValue: messages.append(payload)
-            case FusionOpcodes.ping.rawValue: messages.append(UInt16(payload.count))
-            case FusionOpcodes.text.rawValue: messages.append(String(bytes: payload, encoding: .utf8) ?? .init())
-            default: throw FusionFramerError.unexpectedOpcode }
-
+            guard let payload = buffer.payload(from: length) else { throw FusionFramerError.parsingFailed }
+            guard let message = payload.decode(from: opcode) else { throw FusionFramerError.parsingFailed }
             if buffer.count >= length { buffer = buffer.subdata(in: .init(length)..<buffer.count) }
-            if let extracted = buffer.extractLength() { length = extracted }
+            if let extracted = buffer.length() { length = extracted }; messages.append(message)
         }
         return messages
     }

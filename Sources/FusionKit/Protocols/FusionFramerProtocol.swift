@@ -31,11 +31,9 @@ protocol FusionFramerProtocol: Sendable {
     ///    +--------+---------+- - - - - - -+
     ///
     /// This protocol is based on a standardized Type-Length-Value (TLV) design scheme.
-
-    /// Clear the message buffer
     ///
-    /// Current message buffer will be cleared
-    func reset() async -> Void
+    /// - Parameter buffer: the initialize buffer as `Data`
+    init(buffer: Data)
 
     /// Create a `FusionMessage` conform to the `FusionProtocol`
     ///

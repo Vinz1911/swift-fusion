@@ -10,7 +10,7 @@ import Foundation
 import Network
 
 public actor FusionChannel: FusionChannelProtocol {
-    private let framer = FusionFramer()
+    private var framer = FusionFramer()
     private let (stream, continuation) = FusionStream.makeStream()
 
     private var parameters: FusionParameters
@@ -35,7 +35,7 @@ public actor FusionChannel: FusionChannelProtocol {
     /// Set config for `NetworkConnection` and establish new channel
     public func start() async throws -> Void {
         guard channel == nil else { channel = nil; throw FusionChannelError.alreadyEstablished }
-        await framer.reset(); let parameter = NWParameters(tls: parameters.tls, tcp: parameters.tcp, serviceClass: parameters.service)
+        framer = .init(); let parameter = NWParameters(tls: parameters.tls, tcp: parameters.tcp, serviceClass: parameters.service)
         channel = NetworkConnection(to: endpoint, using: .parameters(initialParameters: parameter) { TCP() })
         process = Task(priority: parameters.priority) { [weak self] in
             do { try await self?.processing() } catch { self?.continuation.finish(throwing: error) }

@@ -71,19 +71,30 @@ extension Data {
         return UInt32(bigEndian: withUnsafeBytes { $0.load(as: UInt32.self) })
     }
 
-    /// Extract `UInt32` from `DispatchData`
+    /// Extract `UInt32` from payload
     ///
     /// - Returns: the extracted length as `UInt32
-    func extractLength() -> UInt32? {
+    func length() -> UInt32? {
         let length = Data(self.subdata(in: FusionConstants.opcode.rawValue..<FusionConstants.header.rawValue))
         return length.endian
     }
 
-    /// Extract `Data` from `DispatchData`
+    /// Extract `Data` from payload
     ///
     /// - Parameter length: the amount of bytes to extract
     /// - Returns: the extracted bytes as `Data`
-    func extractPayload(length: UInt32) -> Data? {
+    func payload(from length: UInt32) -> Data? {
         return Data(self.subdata(in: FusionConstants.header.rawValue..<Int(length)))
+    }
+
+    /// Decode `FusionProtocol`
+    ///
+    /// - Parameter opcode: the `FusionOpcodes`
+    /// - Returns: decoded `FusionProtocol`
+    func decode(from opcode: UInt8) -> FusionProtocol? {
+        if opcode == FusionOpcodes.ping.rawValue { return UInt16.decode(from: self) }
+        if opcode == FusionOpcodes.binary.rawValue { return Data.decode(from: self) }
+        if opcode == FusionOpcodes.text.rawValue { return String.decode(from: self) }
+        return nil
     }
 }
