@@ -8,7 +8,7 @@
 
 import Foundation
 
-internal protocol FusionFramerProtocol: Sendable {
+protocol FusionFramerProtocol: Sendable {
     /// Creates an instance of `FusionFramer`.
     ///
     /// The `FusionFramer` implements the **Fusion Framing Protocol (FFP)** —
@@ -31,21 +31,21 @@ internal protocol FusionFramerProtocol: Sendable {
     ///    +--------+---------+- - - - - - -+
     ///
     /// This protocol is based on a standardized Type-Length-Value (TLV) design scheme.
-    
+
     /// Clear the message buffer
     ///
     /// Current message buffer will be cleared
     func reset() async -> Void
-    
-    /// Create a `FusionMessage` conform frame
+
+    /// Create a `FusionMessage` conform to the `FusionProtocol`
     ///
-    /// - Parameter message: generic type which conforms to `FusionMessage`
+    /// - Parameter message: the `FusionMessage` conform to the `FusionProtocol`
     /// - Returns: the message frame as `Data`
-    nonisolated func create<T: FusionMessage>(message: T) throws -> Data
-    
-    /// Parse a `FusionMessage` conform frame
+    nonisolated func create<Message: FusionProtocol>(message: Message) throws -> Data
+
+    /// Parse a `FusionMessage` conform to the `FusionProtocol`
     ///
-    /// - Parameter data: the `Data` slice of the `FusionMessage`
-    /// - Returns: a collection of `FusionMessage`s and `Error`
-    func parse(data: Data) async throws -> [FusionMessage]
+    /// - Parameter data: the `Data` slice of the `FusionMessage` conform to the `FusionProtocol`
+    /// - Returns: a collection of `FusionMessage`s conform to the `FusionProtocol` and `Error`
+    func parse(data: Data) async throws -> [FusionProtocol]
 }

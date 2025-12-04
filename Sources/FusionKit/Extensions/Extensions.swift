@@ -11,17 +11,17 @@ import Network
 
 // MARK: - UInt32 -
 
-internal extension UInt32 {
+extension UInt32 {
     /// Convert integer to data with bigEndian
     var endian: Data { withUnsafeBytes(of: self.bigEndian) { Data($0) } }
 }
 
 // MARK: - Duration -
 
-internal extension Duration {
+extension Duration {
     /// Interval time
     static var interval: Self { .milliseconds(50) }
-    
+
     /// Timeout deadline
     static var timeout: Self { .seconds(4.0) }
 }
@@ -56,7 +56,7 @@ extension NetworkConnection {
 
 // MARK: - Data -
 
-internal extension Data {
+extension Data {
     /// Slice data into chunks
     ///
     /// - Parameter leverage: the size of each chunk as `Int`
@@ -64,13 +64,13 @@ internal extension Data {
         let size: Int = Swift.min(leverage.rawValue, Int(UInt16.max / 2))
         return stride(from: .zero, to: count, by: size).map { subdata(in: $0..<(count - $0 > size ? $0 + size : count)) }
     }
-    
+
     /// Extract `UInt32` from data as big endian
     var endian: UInt32? {
         guard !self.isEmpty else { return .zero }
         return UInt32(bigEndian: withUnsafeBytes { $0.load(as: UInt32.self) })
     }
-    
+
     /// Extract `UInt32` from `DispatchData`
     ///
     /// - Returns: the extracted length as `UInt32
@@ -78,7 +78,7 @@ internal extension Data {
         let length = Data(self.subdata(in: FusionConstants.opcode.rawValue..<FusionConstants.header.rawValue))
         return length.endian
     }
-    
+
     /// Extract `Data` from `DispatchData`
     ///
     /// - Parameter length: the amount of bytes to extract

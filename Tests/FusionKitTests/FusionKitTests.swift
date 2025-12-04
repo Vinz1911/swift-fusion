@@ -14,34 +14,35 @@ import Network
 @Suite("FusionKit Tests")
 struct FusionKitTests {
     let channel = FusionChannel(using: .hostPort(host: "de0.weist.org", port: 7878))
-    
+
     /// Send `String` message
     @Test("Send String") func sendString() async throws {
         try await sendReceive(message: "16384")
     }
-    
+
     /// Send `Data` message
     @Test("Send Data") func sendData() async throws {
         try await sendReceive(message: Data(count: 16384))
     }
-    
+
     /// Send `UInt16` message
     @Test("Send UInt") func sendUInt() async throws {
         try await sendReceive(message: UInt16(16384))
     }
-    
+
     /// Create + parse with `FusionFramer`
     @Test("Parse Message") func parseMessage() async throws {
         let framer = FusionFramer(); var frames: Data = .init()
         let messages: [FusionMessage] = ["Hello World! 🌍", Data(count: 16384), UInt16.max]
         var parsed: [FusionMessage] = .init()
         
+        guard let messages = messages as? [FusionProtocol] else { return }
         frames.append(try framer.create(message: messages[0]))
         frames.append(try framer.create(message: messages[1]))
         frames.append(try framer.create(message: messages[2]))
-        
+
         for message in try await framer.parse(data: frames) { parsed.append(message) }
-        
+
         if let message = messages[0] as? String, let parse = parsed[0] as? String { print("\(message) == \(parse)"); #expect(message == parse) }
         if let message = messages[1] as? Data, let parse = parsed[1] as? Data { print("\(message.count) == \(parse.count)"); #expect(message == parse) }
         if let message = messages[2] as? UInt16, let parse = parsed[2] as? UInt16 { print("\(message) == \(parse)"); #expect(message == parse) }
@@ -54,9 +55,8 @@ extension FusionKitTests {
     /// Perform Send + Receive
     ///
     /// - Parameter message: message that conforms to `FusionMessage`
-    private func sendReceive<T: FusionMessage>(message: T) async throws {
-        try await channel.start()
-        try await channel.send(message: message)
+    private func sendReceive<Message: FusionMessage>(message: Message) async throws {
+        try await channel.start(); await channel.send(message: message)
         for try await result in channel.receive() {
             guard case .message(let messages) = result else { continue }
             if message is String {

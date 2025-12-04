@@ -22,7 +22,7 @@ public enum FusionLeverage: Int, Sendable {
 // MARK: - Message Flow Control -
 
 /// The `FusionOpcodes` for the frame header
-internal enum FusionOpcodes: UInt8, Sendable {
+enum FusionOpcodes: UInt8, Sendable {
     case none   = 0x0
     case text   = 0x1
     case binary = 0x2
@@ -30,7 +30,7 @@ internal enum FusionOpcodes: UInt8, Sendable {
 }
 
 /// The `FusionConstants` for protocol limits
-internal enum FusionConstants: Int, Sendable {
+enum FusionConstants: Int, Sendable {
     case opcode = 0x1
     case header = 0x5
     case frame  = 0xFFFFFFFF

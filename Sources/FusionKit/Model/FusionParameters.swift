@@ -17,7 +17,7 @@ public struct FusionParameters: FusionParametersProtocol, Sendable {
     public var service: NWParameters.ServiceClass
     public var priority: TaskPriority
     public var leverage: FusionLeverage
-    
+
     /// The configurable `FusionParameters`
     ///
     /// - Parameters:

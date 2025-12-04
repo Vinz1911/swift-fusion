@@ -11,16 +11,16 @@ import Network
 public protocol FusionParametersProtocol: Sendable {
     /// underlying channel specific `NWProtocolTLS.Options`
     var tls: NWProtocolTLS.Options? { get set }
-    
+
     /// underlying channel specific `NWProtocolTCP.Options`
     var tcp: NWProtocolTCP.Options { get set }
-    
+
     /// the `TaskPriority` for the channel
     var priority: TaskPriority { get set }
-    
+
     /// receive channel leverage `FusionLeverage`
     var leverage: FusionLeverage { get set }
-    
+
     /// The configurable `FusionParameters`
     ///
     /// - Parameters:

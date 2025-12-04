@@ -10,11 +10,11 @@ import Foundation
 
 // MARK: - Typealias
 
-internal typealias FusionStream = AsyncThrowingStream<FusionResult, Error>
+typealias FusionStream = AsyncThrowingStream<FusionResult, Error>
 
 // MARK: - Result Type -
 
-/// The `FusionResult` internal message transmitter
+/// The `FusionResult` containing `FusionMessage` and `FusionReport`
 @frozen
 public enum FusionResult: Sendable {
     case message(FusionMessage)
@@ -27,13 +27,13 @@ public enum FusionResult: Sendable {
 public struct FusionReport: Sendable {
     public private(set) var inbound: Int?
     public private(set) var outbound: Int?
-    
+
     /// Create a `FusionReport`
     ///
     /// - Parameters:
     ///   - inbound: incoming byte snapshot
     ///   - outbound: outgoing byte snapshot
-    internal init(inbound: Int? = nil, outbound: Int? = nil) {
+    init(inbound: Int? = nil, outbound: Int? = nil) {
         self.inbound = inbound
         self.outbound = outbound
     }
