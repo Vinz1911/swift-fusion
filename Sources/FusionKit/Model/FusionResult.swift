@@ -27,7 +27,7 @@ public enum FusionResult: Sendable {
 public struct FusionReport: Sendable {
     public private(set) var inbound: Int?
     public private(set) var outbound: Int?
-
+    
     /// Create a `FusionReport`
     ///
     /// - Parameters:

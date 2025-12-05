@@ -13,7 +13,7 @@ protocol FusionFramerProtocol: Sendable {
     ///
     /// The `FusionFramer` implements the **Fusion Framing Protocol (FFP)** —
     /// a fast and lightweight message framing protocol that supports both
-    /// `ByteBuffer`- and `String`-based messages.
+    /// `Data`- and `String`-based messages.
     ///
     /// It also provides support for `UInt16`, allowing the creation of data frames
     /// with a defined size, which can be used for round-trip time (RTT) measurements.
@@ -31,16 +31,18 @@ protocol FusionFramerProtocol: Sendable {
     ///    +--------+---------+- - - - - - -+
     ///
     /// This protocol is based on a standardized Type-Length-Value (TLV) design scheme.
+    
+    /// Clear the internal `Data` message buffer
     ///
-    /// - Parameter buffer: the initialize buffer as `Data`
-    init(buffer: Data)
-
+    /// Current message buffer will be cleared
+    func clear() async -> Void
+    
     /// Create a `FusionMessage` conform to the `FusionProtocol`
     ///
     /// - Parameter message: the `FusionMessage` conform to the `FusionProtocol`
     /// - Returns: the message frame as `Data`
     nonisolated func create<Message: FusionProtocol>(message: Message) throws -> Data
-
+    
     /// Parse a `FusionMessage` conform to the `FusionProtocol`
     ///
     /// - Parameter data: the `Data` slice of the `FusionMessage` conform to the `FusionProtocol`

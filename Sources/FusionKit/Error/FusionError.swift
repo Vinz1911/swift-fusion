@@ -15,7 +15,7 @@ import Foundation
 public enum FusionChannelError: Error, Sendable {
     case channelTimeout
     case alreadyEstablished
-
+    
     public var description: String {
         switch self {
         case .alreadyEstablished: return "the channel is already established"
@@ -32,7 +32,7 @@ public enum FusionFramerError: Error, Sendable {
     case readBufferOverflow
     case writeBufferOverflow
     case unexpectedOpcode
-
+    
     public var description: String {
         switch self {
         case .parsingFailed: return "unable to parse message frame"

@@ -21,7 +21,7 @@ extension UInt32 {
 extension Duration {
     /// Interval time
     static var interval: Self { .milliseconds(50) }
-
+    
     /// Timeout deadline
     static var timeout: Self { .seconds(4.0) }
 }
@@ -64,37 +64,40 @@ extension Data {
         let size: Int = Swift.min(leverage.rawValue, Int(UInt16.max / 2))
         return stride(from: .zero, to: count, by: size).map { subdata(in: $0..<(count - $0 > size ? $0 + size : count)) }
     }
-
+    
     /// Extract `UInt32` from data as big endian
     var endian: UInt32? {
         guard !self.isEmpty else { return .zero }
         return UInt32(bigEndian: withUnsafeBytes { $0.load(as: UInt32.self) })
     }
+}
 
+// MARK: - Fusion Framer Data -
+
+extension Data {
     /// Extract `UInt32` from payload
     ///
     /// - Returns: the extracted length as `UInt32
     func length() -> UInt32? {
-        let length = Data(self.subdata(in: FusionConstants.opcode.rawValue..<FusionConstants.header.rawValue))
+        let length = Data(self.subdata(in: FusionFrame.opcode.rawValue..<FusionFrame.header.rawValue))
         return length.endian
     }
-
+    
     /// Extract `Data` from payload
     ///
     /// - Parameter length: the amount of bytes to extract
     /// - Returns: the extracted bytes as `Data`
     func payload(from length: UInt32) -> Data? {
-        return Data(self.subdata(in: FusionConstants.header.rawValue..<Int(length)))
+        return Data(self.subdata(in: FusionFrame.header.rawValue..<Int(length)))
     }
-
-    /// Decode `FusionProtocol`
+    
+    /// Decode a `FusionMessage` as `FusionProtocol`
     ///
-    /// - Parameter opcode: the `FusionOpcodes`
-    /// - Returns: decoded `FusionProtocol`
-    func decode(from opcode: UInt8) -> FusionProtocol? {
-        if opcode == FusionOpcodes.ping.rawValue { return UInt16.decode(from: self) }
-        if opcode == FusionOpcodes.binary.rawValue { return Data.decode(from: self) }
-        if opcode == FusionOpcodes.text.rawValue { return String.decode(from: self) }
-        return nil
+    /// - Parameters:
+    ///   - opcode: the `FusionOpcode`
+    /// - Returns: the `FusionMessage`
+    func decode(with opcode: UInt8) -> FusionProtocol? {
+        guard let opcode = FusionOpcode(rawValue: opcode) else { return nil }
+        switch opcode { case .string: return String.decode(from: self) case .data: return Data.decode(from: self) case .uint16: return UInt16.decode(from: self) }
     }
 }

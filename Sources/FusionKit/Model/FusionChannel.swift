@@ -12,7 +12,7 @@ import Network
 public actor FusionChannel: FusionChannelProtocol {
     private var framer = FusionFramer()
     private let (stream, continuation) = FusionStream.makeStream()
-
+    
     private var parameters: FusionParameters
     private var endpoint: NWEndpoint
     private var channel: NetworkConnection<TCP>?
@@ -29,7 +29,7 @@ public actor FusionChannel: FusionChannelProtocol {
         self.endpoint = endpoint
         self.parameters = parameters
     }
-
+    
     /// Start to establish a new channel
     ///
     /// Set config for `NetworkConnection` and establish new channel
@@ -42,7 +42,7 @@ public actor FusionChannel: FusionChannelProtocol {
         }
         if let channel { try await channel.timeout() }
     }
-
+    
     /// Cancel the current channel
     ///
     /// Stops the receiver and cancels the current channel
@@ -50,7 +50,7 @@ public actor FusionChannel: FusionChannelProtocol {
         if let process { process.cancel() }
         channel = nil; continuation.finish()
     }
-
+    
     /// Send messages over the established channel
     ///
     /// - Parameter message: the message conform to `FusionMessage`
@@ -60,7 +60,7 @@ public actor FusionChannel: FusionChannelProtocol {
         }
         await process.value
     }
-
+    
     /// Receive messages over the established channel
     ///
     /// - Returns: the iteratable `AsyncThrowingStream` contains `FusionResult`
@@ -80,7 +80,7 @@ private extension FusionChannel {
         let frame = try framer.create(message: message)
         for chunk in frame.chunks(of: parameters.leverage) { try await channel.send(chunk); continuation.yield(.report(.init(outbound: chunk.count))) }
     }
-
+    
     /// Receive message frames over the channel and parse it with `FusionFramer`
     ///
     /// Exposes the parsed `FusionMessage` and the `FusionReport`

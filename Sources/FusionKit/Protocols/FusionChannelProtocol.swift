@@ -18,22 +18,22 @@ public protocol FusionChannelProtocol: Sendable {
     ///   - host: the connected `NWEndpoint`
     ///   - parameters: network framework `FusionParameters`
     init(using endpoint: NWEndpoint, parameters: FusionParameters)
-
+    
     /// Start to establish a new channel
     ///
     /// Set config for `NetworkConnection` and establish new channel
     func start() async throws -> Void
-
+    
     /// Cancel the current channel
     ///
     /// Stops the receiver and cancels the current channel
     func cancel() async -> Void
-
+    
     /// Send messages over the established channel
     ///
     /// - Parameter message: the message conform to `FusionMessage`
     func send<Message: FusionMessage>(message: Message) async -> Void
-
+    
     /// Receive messages over the established channel
     ///
     /// - Returns: the iteratable `AsyncThrowingStream` contains `FusionResult`

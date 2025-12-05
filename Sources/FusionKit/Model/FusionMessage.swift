@@ -19,32 +19,33 @@ public protocol FusionMessage: Sendable { }
 /// The `FusionProtocol` protocol for message conformance
 protocol FusionProtocol: FusionMessage {
     var opcode: UInt8 { get }
-    var size: Data { get }
+    var size: UInt32 { get }
     var encode: Data { get }
+    static func decode(from payload: Data) -> FusionProtocol?
 }
 
 // MARK: - Fusion Message Extensions -
 
 /// Conformance to protocol `FusionProtocol` and `FusionMessage`
 extension UInt16: FusionProtocol {
-    var opcode: UInt8 { FusionOpcodes.ping.rawValue }
-    var size: Data { UInt32(self.encode.count + FusionConstants.header.rawValue).endian }
+    var opcode: UInt8 { FusionOpcode.uint16.rawValue }
+    var size: UInt32 { UInt32(self.encode.count + FusionFrame.header.rawValue) }
     var encode: Data { Data(count: Int(self)) }
     static func decode(from payload: Data) -> FusionProtocol? { Self(payload.count) }
 }
 
 /// Conformance to protocol `FusionProtocol` and `FusionMessage`
 extension String: FusionProtocol {
-    var opcode: UInt8 { FusionOpcodes.text.rawValue }
-    var size: Data { UInt32(self.encode.count + FusionConstants.header.rawValue).endian }
+    var opcode: UInt8 { FusionOpcode.string.rawValue }
+    var size: UInt32 { UInt32(self.encode.count + FusionFrame.header.rawValue) }
     var encode: Data { Data(self.utf8) }
     static func decode(from payload: Data) -> FusionProtocol? { Self(bytes: payload, encoding: .utf8) }
 }
 
 /// Conformance to protocol `FusionProtocol` and `FusionMessage`
 extension Data: FusionProtocol {
-    var opcode: UInt8 { FusionOpcodes.binary.rawValue }
-    var size: Data { UInt32(self.encode.count + FusionConstants.header.rawValue).endian }
+    var opcode: UInt8 { FusionOpcode.data.rawValue }
+    var size: UInt32 { UInt32(self.encode.count + FusionFrame.header.rawValue) }
     var encode: Data { self }
     static func decode(from payload: Data) -> FusionProtocol? { payload }
 }

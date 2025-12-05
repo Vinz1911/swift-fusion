@@ -12,3 +12,4 @@ disabled_rules:
   - switch_case_alignment
   - empty_enum_arguments
   - cyclomatic_complexity
+  - trailing_whitespace
