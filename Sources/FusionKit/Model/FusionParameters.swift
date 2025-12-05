@@ -15,7 +15,7 @@ import Network
 public struct FusionParameters: FusionParametersProtocol, Sendable {
     public var tls: NWProtocolTLS.Options?
     public var tcp: NWProtocolTCP.Options
-    public var service: NWParameters.ServiceClass
+    public var serviceClass: NWParameters.ServiceClass
     public var priority: TaskPriority
     public var leverage: FusionLeverage
     
@@ -24,14 +24,14 @@ public struct FusionParameters: FusionParametersProtocol, Sendable {
     /// - Parameters:
     ///   - tls: the underlying channel specific `NWProtocolTLS.Options`
     ///   - tcp: the underlying channel specific `NWProtocolTCP.Options`
-    ///   - service: the `NWParameters.ServiceClass`
+    ///   - serviceClass: the `NWParameters.ServiceClass`
     ///   - priority: the `TaskPriority` for the channel
     ///   - leverage: receive channel leverage `FusionLeverage`
-    public init(tls: NWProtocolTLS.Options? = nil, tcp: NWProtocolTCP.Options = .init(), service: NWParameters.ServiceClass = .bestEffort, priority: TaskPriority = .userInitiated, leverage: FusionLeverage = .high) {
+    public init(tls: NWProtocolTLS.Options? = nil, tcp: NWProtocolTCP.Options = .init(), serviceClass: NWParameters.ServiceClass = .bestEffort, priority: TaskPriority = .userInitiated, leverage: FusionLeverage = .high) {
         self.tcp = tcp
         self.tls = tls
         self.priority = priority
         self.leverage = leverage
-        self.service = service
+        self.serviceClass = serviceClass
     }
 }

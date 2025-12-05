@@ -35,7 +35,7 @@ public actor FusionChannel: FusionChannelProtocol {
     /// Set config for `NetworkConnection` and establish new channel
     public func start() async throws -> Void {
         guard channel == nil else { channel = nil; throw FusionChannelError.alreadyEstablished }
-        let parameter = NWParameters(tls: parameters.tls, tcp: parameters.tcp, serviceClass: parameters.service)
+        let parameter = NWParameters(tls: parameters.tls, tcp: parameters.tcp, serviceClass: parameters.serviceClass)
         channel = NetworkConnection(to: endpoint, using: .parameters(initialParameters: parameter) { TCP() })
         process = Task(priority: parameters.priority) { [weak self] in
             do { try await self?.processing() } catch { self?.continuation.finish(throwing: error) }

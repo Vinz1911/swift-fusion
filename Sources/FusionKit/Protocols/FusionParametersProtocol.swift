@@ -27,8 +27,8 @@ public protocol FusionParametersProtocol: Sendable {
     /// - Parameters:
     ///   - tls: the underlying channel specific `NWProtocolTLS.Options`
     ///   - tcp: the underlying channel specific `NWProtocolTCP.Options`
-    ///   - service: the `NWParameters.ServiceClass`
+    ///   - serviceClass: the `NWParameters.ServiceClass`
     ///   - priority: the `TaskPriority` for the channel
     ///   - leverage: receive channel leverage `FusionLeverage`
-    init(tls: NWProtocolTLS.Options?, tcp: NWProtocolTCP.Options, service: NWParameters.ServiceClass, priority: TaskPriority, leverage: FusionLeverage)
+    init(tls: NWProtocolTLS.Options?, tcp: NWProtocolTCP.Options, serviceClass: NWParameters.ServiceClass, priority: TaskPriority, leverage: FusionLeverage)
 }
