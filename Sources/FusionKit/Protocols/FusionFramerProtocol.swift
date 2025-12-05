@@ -37,15 +37,15 @@ protocol FusionFramerProtocol: Sendable {
     /// Current message buffer will be cleared
     func clear() async -> Void
     
-    /// Create a `FusionMessage` conform to the `FusionProtocol`
+    /// Create a `FusionMessage` conform to the `FusionFrame`
     ///
-    /// - Parameter message: the `FusionMessage` conform to the `FusionProtocol`
+    /// - Parameter message: the `FusionMessage` conform to the `FusionFrame`
     /// - Returns: the message frame as `Data`
-    nonisolated func create<Message: FusionProtocol>(message: Message) throws -> Data
+    nonisolated func create<Message: FusionFrame>(message: Message) throws -> Data
     
-    /// Parse a `FusionMessage` conform to the `FusionProtocol`
+    /// Parse a `FusionMessage` conform to the `FusionFrame`
     ///
-    /// - Parameter data: the `Data` slice of the `FusionMessage` conform to the `FusionProtocol`
-    /// - Returns: a collection of `FusionMessage`s conform to the `FusionProtocol` and `Error`
-    func parse(data: Data) async throws -> [FusionProtocol]
+    /// - Parameter data: the `Data` slice of the `FusionMessage` conform to the `FusionFrame`
+    /// - Returns: a collection of `FusionMessage`s conform to the `FusionFrame` and `Error`
+    func parse(data: Data) async throws -> [FusionFrame]
 }

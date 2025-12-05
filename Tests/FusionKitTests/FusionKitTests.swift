@@ -36,7 +36,7 @@ struct FusionKitTests {
         let messages: [FusionMessage] = ["Hello World! 🌍", Data(count: 16384), UInt16.max]
         var parsed: [FusionMessage] = .init()
         
-        guard let messages = messages as? [FusionProtocol] else { return }
+        guard let messages = messages as? [FusionFrame] else { return }
         frames.append(try framer.create(message: messages[0]))
         frames.append(try framer.create(message: messages[1]))
         frames.append(try framer.create(message: messages[2]))

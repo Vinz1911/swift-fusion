@@ -79,7 +79,7 @@ extension Data {
     ///
     /// - Returns: the extracted length as `UInt32
     func length() -> UInt32? {
-        let length = Data(self.subdata(in: FusionFrame.opcode.rawValue..<FusionFrame.header.rawValue))
+        let length = Data(self.subdata(in: FusionPacket.opcode.rawValue..<FusionPacket.header.rawValue))
         return length.endian
     }
     
@@ -88,15 +88,15 @@ extension Data {
     /// - Parameter length: the amount of bytes to extract
     /// - Returns: the extracted bytes as `Data`
     func payload(from length: UInt32) -> Data? {
-        return Data(self.subdata(in: FusionFrame.header.rawValue..<Int(length)))
+        return Data(self.subdata(in: FusionPacket.header.rawValue..<Int(length)))
     }
     
-    /// Decode a `FusionMessage` as `FusionProtocol`
+    /// Decode a `FusionMessage` as `FusionFrame`
     ///
     /// - Parameters:
     ///   - opcode: the `FusionOpcode`
     /// - Returns: the `FusionMessage`
-    func decode(with opcode: UInt8) -> FusionProtocol? {
+    func decode(with opcode: UInt8) -> FusionFrame? {
         guard let opcode = FusionOpcode(rawValue: opcode) else { return nil }
         switch opcode { case .string: return String.decode(from: self) case .data: return Data.decode(from: self) case .uint16: return UInt16.decode(from: self) }
     }

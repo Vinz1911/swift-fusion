@@ -8,7 +8,7 @@
 
 import Foundation
 
-// MARK: - Typealias
+// MARK: - Typealias -
 
 typealias FusionStream = AsyncThrowingStream<FusionResult, Error>
 

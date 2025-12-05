@@ -16,36 +16,36 @@ import Foundation
 /// It conforms to `UInt16`, `String` and `Data`
 public protocol FusionMessage: Sendable { }
 
-/// The `FusionProtocol` protocol for message conformance
-protocol FusionProtocol: FusionMessage {
+/// The `FusionFrame` protocol for message conformance
+protocol FusionFrame: FusionMessage {
     var opcode: UInt8 { get }
     var size: UInt32 { get }
     var encode: Data { get }
-    static func decode(from payload: Data) -> FusionProtocol?
+    static func decode(from payload: Data) -> FusionFrame?
 }
 
 // MARK: - Fusion Message Extensions -
 
-/// Conformance to protocol `FusionProtocol` and `FusionMessage`
-extension UInt16: FusionProtocol {
+/// Conformance to protocol `FusionFrame` and `FusionMessage`
+extension UInt16: FusionFrame {
     var opcode: UInt8 { FusionOpcode.uint16.rawValue }
-    var size: UInt32 { UInt32(self.encode.count + FusionFrame.header.rawValue) }
+    var size: UInt32 { UInt32(self.encode.count + FusionPacket.header.rawValue) }
     var encode: Data { Data(count: Int(self)) }
-    static func decode(from payload: Data) -> FusionProtocol? { Self(payload.count) }
+    static func decode(from payload: Data) -> FusionFrame? { Self(payload.count) }
 }
 
-/// Conformance to protocol `FusionProtocol` and `FusionMessage`
-extension String: FusionProtocol {
+/// Conformance to protocol `FusionFrame` and `FusionMessage`
+extension String: FusionFrame {
     var opcode: UInt8 { FusionOpcode.string.rawValue }
-    var size: UInt32 { UInt32(self.encode.count + FusionFrame.header.rawValue) }
+    var size: UInt32 { UInt32(self.encode.count + FusionPacket.header.rawValue) }
     var encode: Data { Data(self.utf8) }
-    static func decode(from payload: Data) -> FusionProtocol? { Self(bytes: payload, encoding: .utf8) }
+    static func decode(from payload: Data) -> FusionFrame? { Self(bytes: payload, encoding: .utf8) }
 }
 
-/// Conformance to protocol `FusionProtocol` and `FusionMessage`
-extension Data: FusionProtocol {
+/// Conformance to protocol `FusionFrame` and `FusionMessage`
+extension Data: FusionFrame {
     var opcode: UInt8 { FusionOpcode.data.rawValue }
-    var size: UInt32 { UInt32(self.encode.count + FusionFrame.header.rawValue) }
+    var size: UInt32 { UInt32(self.encode.count + FusionPacket.header.rawValue) }
     var encode: Data { self }
-    static func decode(from payload: Data) -> FusionProtocol? { payload }
+    static func decode(from payload: Data) -> FusionFrame? { payload }
 }

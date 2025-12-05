@@ -17,7 +17,7 @@ public actor FusionChannel: FusionChannelProtocol {
     private var endpoint: NWEndpoint
     private var channel: NetworkConnection<TCP>?
     private var process: Task<Void, Error>?
-
+    
     /// The `FusionChannel` is a custom network connector that implements the **Fusion Framing Protocol (FFP)**.
     /// It is built on top of the standard `Network` framework library. This fast and lightweight custom framing protocol
     /// enables high-speed data transmission and provides fine-grained control over network flow.
@@ -35,12 +35,12 @@ public actor FusionChannel: FusionChannelProtocol {
     /// Set config for `NetworkConnection` and establish new channel
     public func start() async throws -> Void {
         guard channel == nil else { channel = nil; throw FusionChannelError.alreadyEstablished }
-        framer = .init(); let parameter = NWParameters(tls: parameters.tls, tcp: parameters.tcp, serviceClass: parameters.service)
+        let parameter = NWParameters(tls: parameters.tls, tcp: parameters.tcp, serviceClass: parameters.service)
         channel = NetworkConnection(to: endpoint, using: .parameters(initialParameters: parameter) { TCP() })
         process = Task(priority: parameters.priority) { [weak self] in
             do { try await self?.processing() } catch { self?.continuation.finish(throwing: error) }
         }
-        if let channel { try await channel.timeout() }
+        if let channel { await framer.clear(); try await channel.timeout() }
     }
     
     /// Cancel the current channel
@@ -76,7 +76,7 @@ private extension FusionChannel {
     ///
     /// - Parameter message: the message conform to `FusionMessage`
     private func processing<Message: FusionMessage>(with message: Message) async throws -> Void {
-        guard let channel, let message = message as? FusionProtocol else { return }
+        guard let channel, let message = message as? FusionFrame else { return }
         let frame = try framer.create(message: message)
         for chunk in frame.chunks(of: parameters.leverage) { try await channel.send(chunk); continuation.yield(.report(.init(outbound: chunk.count))) }
     }

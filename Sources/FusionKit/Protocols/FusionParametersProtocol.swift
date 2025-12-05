@@ -3,6 +3,7 @@
 //  FusionKit
 //
 //  Created by Vinzenz Weist on 26.11.25.
+//  Copyright © 2025 Vinzenz Weist. All rights reserved.
 //
 
 import Foundation
