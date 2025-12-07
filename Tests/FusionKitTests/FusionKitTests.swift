@@ -30,6 +30,17 @@ struct FusionKitTests {
         try await sendReceive(message: UInt16(16384))
     }
     
+    @Test("Famer Error") func framerError() async throws {
+        let framer = FusionFramer()
+        #expect(throws: FusionFramerError.outputBufferOverflow) {
+            try framer.create(message: Data(count: Int(UInt32.max)))
+        }
+        
+        await #expect(throws: FusionFramerError.inputBufferOverflow) {
+            try await framer.parse(data: Data(count: Int(UInt32.max) + 1))
+        }
+    }
+    
     /// Create + parse with `FusionFramer`
     @Test("Parse Message") func parseMessage() async throws {
         let framer = FusionFramer(); var frames: Data = .init()

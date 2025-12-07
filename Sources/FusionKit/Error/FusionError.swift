@@ -18,7 +18,7 @@ public enum FusionChannelError: Error, Sendable {
     
     public var description: String {
         switch self {
-        case .alreadyEstablished: return "the channel is already established"
+        case .alreadyEstablished: return "the channel is already established and cannot be established again"
         case .channelTimeout: return "channel run into timeout, failed to establish channel" }
     }
 }
@@ -28,16 +28,16 @@ public enum FusionChannelError: Error, Sendable {
 /// The `FusionFramerError` specific errors
 @frozen
 public enum FusionFramerError: Error, Sendable {
-    case parsingFailed
-    case readBufferOverflow
-    case writeBufferOverflow
-    case unexpectedOpcode
+    case frameParsingFailed
+    case inputBufferOverflow
+    case outputBufferOverflow
+    case invalidFrameOpcode
     
     public var description: String {
         switch self {
-        case .parsingFailed: return "unable to parse message frame"
-        case .readBufferOverflow: return "invalid frame size, read buffer overflow"
-        case .writeBufferOverflow: return "invalid frame size, write buffer overflow"
-        case .unexpectedOpcode: return "unexpected opcode, terminating" }
+        case .frameParsingFailed: return "unable to parse frame into a usable format"
+        case .inputBufferOverflow: return "input buffer overflow occured while reading from the underlying socket"
+        case .outputBufferOverflow: return "output buffer overflow occured while preparing message frame"
+        case .invalidFrameOpcode: return "invalid opcode, discard this frame" }
     }
 }
