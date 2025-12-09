@@ -96,10 +96,7 @@ extension Data {
     ///   - opcode: the `FusionOpcode`
     /// - Returns: the `FusionMessage`
     func decode(with opcode: UInt8) -> FusionFrame? {
-        FusionOpcode(rawValue: opcode).flatMap { switch $0 {
-            case .string: String.decode(from: self)
-            case .data: Data.decode(from: self)
-            case .uint16: UInt16.decode(from: self) }
-        }
+        guard let opcode = FusionOpcode(rawValue: opcode) else { return nil }
+        switch opcode { case .string: return String.decode(from: self) case .data: return Data.decode(from: self) case .uint16: return UInt16.decode(from: self) }
     }
 }
