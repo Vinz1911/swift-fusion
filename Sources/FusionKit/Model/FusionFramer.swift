@@ -21,7 +21,7 @@ actor FusionFramer: FusionFramerProtocol {
     /// - Parameter message: the `FusionMessage` conform to the `FusionFrame`
     /// - Returns: the message frame as `Data`
     nonisolated func create<Message: FusionFrame>(message: Message) throws -> Data {
-        guard message.size <= FusionPacket.frame.rawValue else { throw FusionFramerError.outputBufferOverflow }
+        guard message.size <= FusionPacket.payload.rawValue else { throw FusionFramerError.outputBufferOverflow }
         var frame = Data(); frame.append(message.opcode); frame.append(UInt32(message.size).endian); frame.append(message.encode)
         return frame
     }
@@ -32,12 +32,12 @@ actor FusionFramer: FusionFramerProtocol {
     /// - Returns: a collection of `FusionMessage`s conform to the `FusionFrame` and `Error`
     func parse(data: Data) async throws -> [FusionFrame] {
         var messages: [FusionFrame] = []; buffer.append(data); guard var length = buffer.length() else { return .init() }
-        guard buffer.count <= FusionPacket.frame.rawValue else { throw FusionFramerError.inputBufferOverflow }
+        guard buffer.count <= FusionPacket.payload.rawValue else { throw FusionFramerError.inputBufferOverflow }
         guard buffer.count >= FusionPacket.header.rawValue, buffer.count >= length else { return .init() }
         while buffer.count >= length && length != .zero {
-            guard let opcode = buffer.first else { throw FusionFramerError.frameParsingFailed }
-            guard let payload = buffer.payload(from: length) else { throw FusionFramerError.frameParsingFailed }
-            guard let message = payload.decode(with: opcode) else { throw FusionFramerError.frameParsingFailed }
+            guard let opcode = buffer.first else { throw FusionFramerError.loadOpcodeFailed }
+            guard let payload = buffer.payload(from: length) else { throw FusionFramerError.extractPayloadFailed }
+            guard let message = payload.decode(with: opcode) else { throw FusionFramerError.decodeMessageFailed }
             if buffer.count >= length { buffer = buffer.subdata(in: .init(length)..<buffer.count) }
             if let index = buffer.length() { length = index }; messages.append(message)
         }

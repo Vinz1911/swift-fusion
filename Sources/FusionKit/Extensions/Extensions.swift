@@ -45,8 +45,8 @@ extension NetworkConnection {
     /// Validate channel establishment
     ///
     /// Checks if channel was established otherwise throws error
-    func timeout() async throws -> Void {
-        let clock = ContinuousClock(), deadline = clock.now + .timeout
+    func timeout(after timeout: Duration = .timeout) async throws -> Void {
+        let clock = ContinuousClock(), deadline = clock.now + timeout
         while !Task.isCancelled {
             switch self.state { case .ready: return case .failed(let error), .waiting(let error): throw error default: break }
             guard clock.now < deadline else { throw FusionChannelError.channelTimeout }; try await clock.sleep(for: .interval)
@@ -67,7 +67,7 @@ extension Data {
     
     /// Extract `UInt32` from data as big endian
     var endian: UInt32? {
-        guard !self.isEmpty else { return .zero }
+        guard count >= MemoryLayout<UInt32>.size else { return nil }
         return UInt32(bigEndian: withUnsafeBytes { $0.load(as: UInt32.self) })
     }
 }
@@ -79,8 +79,7 @@ extension Data {
     ///
     /// - Returns: the extracted length as `UInt32
     func length() -> UInt32? {
-        let length = Data(self.subdata(in: FusionPacket.opcode.rawValue..<FusionPacket.header.rawValue))
-        return length.endian
+        self.subdata(in: FusionPacket.opcode.rawValue..<FusionPacket.header.rawValue).endian
     }
     
     /// Extract `Data` from payload
@@ -88,7 +87,7 @@ extension Data {
     /// - Parameter length: the amount of bytes to extract
     /// - Returns: the extracted bytes as `Data`
     func payload(from length: UInt32) -> Data? {
-        return Data(self.subdata(in: FusionPacket.header.rawValue..<Int(length)))
+        self.subdata(in: FusionPacket.header.rawValue..<Int(length))
     }
     
     /// Decode a `FusionMessage` as `FusionFrame`
@@ -97,7 +96,10 @@ extension Data {
     ///   - opcode: the `FusionOpcode`
     /// - Returns: the `FusionMessage`
     func decode(with opcode: UInt8) -> FusionFrame? {
-        guard let opcode = FusionOpcode(rawValue: opcode) else { return nil }
-        switch opcode { case .string: return String.decode(from: self) case .data: return Data.decode(from: self) case .uint16: return UInt16.decode(from: self) }
+        FusionOpcode(rawValue: opcode).flatMap { switch $0 {
+            case .string: String.decode(from: self)
+            case .data: Data.decode(from: self)
+            case .uint16: UInt16.decode(from: self) }
+        }
     }
 }

@@ -14,7 +14,7 @@ import Foundation
 enum FusionPacket: Int, Sendable {
     case opcode = 0x1
     case header = 0x5
-    case frame  = 0xFFFFFFFF
+    case payload  = 0xFFFFFFFF
 }
 
 /// The `FusionOpcode` for the type classification

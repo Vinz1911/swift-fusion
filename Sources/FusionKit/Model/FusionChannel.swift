@@ -54,11 +54,8 @@ public actor FusionChannel: FusionChannelProtocol {
     /// Send messages over the established channel
     ///
     /// - Parameter message: the message conform to `FusionMessage`
-    public func send<Message: FusionMessage>(message: Message) async -> Void {
-        let process = Task(priority: parameters.priority) { [weak self] in
-            do { try await self?.processing(with: message) } catch { self?.continuation.finish(throwing: error) }
-        }
-        await process.value
+    public func send<Message: FusionMessage>(message: Message) async throws -> Void {
+        try await processing(with: message)
     }
     
     /// Receive messages over the established channel
@@ -69,7 +66,7 @@ public actor FusionChannel: FusionChannelProtocol {
     }
 }
 
-// MARK: - Private API -
+// MARK: - Private API Extension -
 
 private extension FusionChannel {
     /// Create message frame with `FusionFramer` and send it over the channel
@@ -88,8 +85,7 @@ private extension FusionChannel {
         while !Task.isCancelled { guard let channel else { return }
             let (data, _) = try await channel.receive(atMost: parameters.leverage.rawValue)
             continuation.yield(.report(.init(inbound: data.count)))
-            let messages = try await self.framer.parse(data: data)
-            for message in messages { continuation.yield(.message(message)) }
+            for message in try await self.framer.parse(data: data) { continuation.yield(.message(message)) }
         }
     }
 }

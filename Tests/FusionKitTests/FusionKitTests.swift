@@ -13,24 +13,28 @@ import Network
 
 @Suite("FusionKit Tests")
 struct FusionKitTests {
-    let channel = FusionChannel(using: .hostPort(host: "localhost", port: 7878))
+    let channel = FusionChannel(using: .hostPort(host: "de0.weist.org", port: 7878))
     
     /// Send `String` message
-    @Test("Send String") func sendString() async throws {
+    @Test("Send String")
+    func sendString() async throws {
         try await sendReceive(message: "16384")
     }
     
     /// Send `Data` message
-    @Test("Send Data") func sendData() async throws {
+    @Test("Send Data")
+    func sendData() async throws {
         try await sendReceive(message: Data(count: 16384))
     }
     
     /// Send `UInt16` message
-    @Test("Send UInt") func sendUInt() async throws {
+    @Test("Send UInt")
+    func sendUInt() async throws {
         try await sendReceive(message: UInt16(16384))
     }
     
-    @Test("Famer Error") func framerError() async throws {
+    @Test("Famer Error")
+    func framerError() async throws {
         let framer = FusionFramer()
         #expect(throws: FusionFramerError.outputBufferOverflow) {
             try framer.create(message: Data(count: Int(UInt32.max)))
@@ -38,6 +42,11 @@ struct FusionKitTests {
         
         await #expect(throws: FusionFramerError.inputBufferOverflow) {
             try await framer.parse(data: Data(count: Int(UInt32.max) + 1))
+        }
+        
+        await #expect(throws: FusionFramerError.decodeMessageFailed) {
+            await framer.clear()
+            let _ = try await framer.parse(data: Data([0x1, 0x0, 0x0, 0x0, 0x6, 0xFF]))
         }
     }
     
@@ -60,14 +69,14 @@ struct FusionKitTests {
     }
 }
 
-// MARK: - Private API -
+// MARK: - Private API Extension -
 
 extension FusionKitTests {
     /// Perform Send + Receive
     ///
     /// - Parameter message: message that conforms to `FusionMessage`
     private func sendReceive<Message: FusionMessage>(message: Message) async throws {
-        try await channel.start(); await channel.send(message: message)
+        try await channel.start(); try await channel.send(message: message)
         for try await result in channel.receive() {
             guard case .message(let messages) = result else { continue }
             if message is String {

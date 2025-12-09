@@ -32,7 +32,7 @@ public protocol FusionChannelProtocol: Sendable {
     /// Send messages over the established channel
     ///
     /// - Parameter message: the message conform to `FusionMessage`
-    func send<Message: FusionMessage>(message: Message) async -> Void
+    func send<Message: FusionMessage>(message: Message) async throws -> Void
     
     /// Receive messages over the established channel
     ///
