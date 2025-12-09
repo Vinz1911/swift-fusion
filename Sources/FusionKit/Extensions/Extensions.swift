@@ -79,7 +79,7 @@ extension Data {
     ///
     /// - Returns: the extracted length as `UInt32
     func length() -> UInt32? {
-        self.subdata(in: FusionPacket.opcode.rawValue..<FusionPacket.header.rawValue).endian
+        Data(self.subdata(in: FusionPacket.opcode.rawValue..<FusionPacket.header.rawValue)).endian
     }
     
     /// Extract `Data` from payload
@@ -87,7 +87,7 @@ extension Data {
     /// - Parameter length: the amount of bytes to extract
     /// - Returns: the extracted bytes as `Data`
     func payload(from length: UInt32) -> Data? {
-        self.subdata(in: FusionPacket.header.rawValue..<Int(length))
+        Data(self.subdata(in: FusionPacket.header.rawValue..<Int(length)))
     }
     
     /// Decode a `FusionMessage` as `FusionFrame`

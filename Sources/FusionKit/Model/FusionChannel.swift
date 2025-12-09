@@ -85,7 +85,8 @@ private extension FusionChannel {
         while !Task.isCancelled { guard let channel else { return }
             let (data, _) = try await channel.receive(atMost: parameters.leverage.rawValue)
             continuation.yield(.report(.init(inbound: data.count)))
-            for message in try await self.framer.parse(data: data) { continuation.yield(.message(message)) }
+            let messages = try await self.framer.parse(data: data)
+            for message in messages { continuation.yield(.message(message)) }
         }
     }
 }
