@@ -36,8 +36,7 @@ actor FusionFramer: FusionFramerProtocol {
         guard buffer.count >= FusionPacket.header.rawValue, buffer.count >= length else { return .init() }
         while buffer.count >= length && length != .zero {
             guard let opcode = buffer.first else { throw FusionFramerError.loadOpcodeFailed }
-            guard let payload = buffer.payload(from: length) else { throw FusionFramerError.extractPayloadFailed }
-            guard let message = payload.decode(with: opcode) else { throw FusionFramerError.decodeMessageFailed }
+            guard let message = buffer.decode(with: opcode, from: length) else { throw FusionFramerError.decodeMessageFailed }
             if buffer.count >= length { buffer = buffer.subdata(in: .init(length)..<buffer.count) }
             if let index = buffer.length() { length = index }; messages.append(message)
         }

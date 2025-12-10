@@ -31,7 +31,6 @@ public enum FusionFramerError: Error, Sendable {
     case inputBufferOverflow
     case outputBufferOverflow
     case loadOpcodeFailed
-    case extractPayloadFailed
     case decodeMessageFailed
     
     public var description: String {
@@ -39,7 +38,6 @@ public enum FusionFramerError: Error, Sendable {
         case .inputBufferOverflow: "input buffer overflow occured while reading from the underlying socket"
         case .outputBufferOverflow: "output buffer overflow occured while preparing message frame"
         case .loadOpcodeFailed: "unable to load opcode, discard this frame (this should never happen!)"
-        case .extractPayloadFailed: "payload extraction failed, discard this frame (this should never happen!)"
         case .decodeMessageFailed: "unable to decode message, discard this frame" }
     }
 }

@@ -18,7 +18,7 @@ struct FusionKitTests {
     /// Send `String` message
     @Test("Send String")
     func sendString() async throws {
-        try await sendReceive(message: "4000000")
+        try await sendReceive(message: "16384")
     }
     
     /// Send `Data` message
@@ -81,9 +81,8 @@ extension FusionKitTests {
             guard case .message(let messages) = result else { continue }
             if message is String {
                 guard let messages = messages as? Data else { continue }
-                try await channel.send(message: "4000000")
-                //print("Received Data: \(messages.count)")
-                //#expect(messages.count == Int(message as! String))
+                print("Received Data: \(messages.count)")
+                #expect(messages.count == Int(message as! String))
             }
             if message is Data {
                 guard let messages = messages as? String else { continue }
@@ -95,7 +94,7 @@ extension FusionKitTests {
                 print("Received UInt16: \(messages)")
                 #expect(messages == message as! UInt16)
             }
-           // await channel.cancel()
+           await channel.cancel()
         }
     }
 }
