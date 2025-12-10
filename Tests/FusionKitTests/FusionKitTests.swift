@@ -13,7 +13,7 @@ import Network
 
 @Suite("FusionKit Tests")
 struct FusionKitTests {
-    let channel = FusionChannel(using: .hostPort(host: "localhost", port: 7878))
+    let channel = FusionChannel(using: .hostPort(host: "de0.weist.org", port: 7878))
     
     /// Send `String` message
     @Test("Send String")
@@ -78,7 +78,7 @@ extension FusionKitTests {
     private func sendReceive<Message: FusionMessage>(message: Message) async throws {
         try await channel.start(); try await channel.send(message: message)
         for try await result in channel.receive() {
-            guard case .message(let messages) = result else { continue }
+            guard let messages = result.message else { continue }
             if message is String {
                 guard let messages = messages as? Data else { continue }
                 print("Received Data: \(messages.count)")

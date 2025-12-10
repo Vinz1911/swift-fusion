@@ -14,26 +14,18 @@ typealias FusionStream = AsyncThrowingStream<FusionResult, Error>
 
 // MARK: - Result Type -
 
-/// The `FusionResult` containing `FusionMessage` and `FusionReport`
-@frozen
-public enum FusionResult: Sendable {
-    case message(FusionMessage)
-    case report(FusionReport)
-}
-
-// MARK: - Byte Report -
-
-/// The `FusionReport` for inbound and outbound bytes
-public struct FusionReport: Sendable {
+public struct FusionResult: FusionResultProtocol, Sendable {
+    public private(set) var message: FusionMessage?
     public private(set) var inbound: Int?
     public private(set) var outbound: Int?
     
-    /// Create a `FusionReport`
-    ///
+    /// The `FusionResult`
     /// - Parameters:
-    ///   - inbound: incoming byte snapshot
-    ///   - outbound: outgoing byte snapshot
-    init(inbound: Int? = nil, outbound: Int? = nil) {
+    ///   - message: the latest `FusionMessage`
+    ///   - inbound: the received bytes snapshot as `Int`
+    ///   - outbound: the sent bytes snapshot as `Int`
+    init(message: FusionMessage? = nil, inbound: Int? = nil, outbound: Int? = nil) {
+        self.message = message
         self.inbound = inbound
         self.outbound = outbound
     }

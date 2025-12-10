@@ -17,7 +17,7 @@ import Foundation
 public protocol FusionMessage: Sendable { }
 
 /// The `FusionFrame` protocol for message conformance
-protocol FusionFrame: FusionMessage {
+protocol FusionFrame: FusionMessage, Sendable {
     var opcode: UInt8 { get }
     var size: UInt64 { get }
     var encode: Data { get }

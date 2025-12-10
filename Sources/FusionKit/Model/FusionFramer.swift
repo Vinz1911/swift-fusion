@@ -8,7 +8,7 @@
 
 import Foundation
 
-actor FusionFramer: FusionFramerProtocol {
+actor FusionFramer: FusionFramerProtocol, Sendable {
     private var buffer: Data = .init()
     
     /// Clear the internal `Data` message buffer
