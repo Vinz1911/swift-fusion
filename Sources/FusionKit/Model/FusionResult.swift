@@ -16,13 +16,13 @@ typealias FusionStream = AsyncThrowingStream<FusionResult, Error>
 
 public struct FusionResult: FusionResultProtocol, Sendable {
     public private(set) var message: FusionMessage?
-    public private(set) var report: FusionReport
+    public private(set) var report: FusionReport?
     
     /// The `FusionResult`
     /// - Parameters:
     ///   - message: the latest `FusionMessage`
     ///   - report: the latest `FusionReport`
-    init(message: FusionMessage? = nil, report: FusionReport = .init()) {
+    init(message: FusionMessage? = nil, report: FusionReport? = nil) {
         self.message = message
         self.report = report
     }

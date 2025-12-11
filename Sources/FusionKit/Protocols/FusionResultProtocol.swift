@@ -14,7 +14,7 @@ public protocol FusionResultProtocol: Sendable {
     var message: FusionMessage? { get }
     
     /// the latest `FusionReport`
-    var report: FusionReport { get }
+    var report: FusionReport? { get }
 }
 
 // MARK: - Fusion Report -
