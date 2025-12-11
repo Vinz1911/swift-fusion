@@ -13,9 +13,16 @@ public protocol FusionResultProtocol: Sendable {
     /// The latest `FusionMessage`
     var message: FusionMessage? { get }
     
-    /// The received bytes snapshot as `Int`
+    /// the latest `FusionReport`
+    var report: FusionReport { get }
+}
+
+// MARK: - Fusion Report -
+
+public protocol FusionReportProtocol: Sendable {
+    /// The incoming bytes snapshot as `Int`
     var inbound: Int? { get }
     
-    /// The sent bytes snapshot as `Int`
+    /// The outgoing bytes snapshot as `Int`
     var outbound: Int? { get }
 }

@@ -76,7 +76,7 @@ private extension FusionChannel {
         guard let channel, let message = message as? FusionFrame else { return }
         let frame = try framer.create(message: message)
         for chunk in frame.chunks(of: parameters.leverage) {
-            try await channel.send(chunk); continuation.yield(.init(outbound: chunk.count))
+            try await channel.send(chunk); continuation.yield(.init(report: .init(outbound: chunk.count)))
         }
     }
     
@@ -86,7 +86,7 @@ private extension FusionChannel {
     private func processing() async throws -> Void {
         while !Task.isCancelled { guard let channel else { return }
             let (data, _) = try await channel.receive(atMost: parameters.leverage.rawValue)
-            continuation.yield(.init(inbound: data.count))
+            continuation.yield(.init(report: .init(inbound: data.count)))
             let messages = try await self.framer.parse(data: data)
             for message in messages { continuation.yield(.init(message: message)) }
         }

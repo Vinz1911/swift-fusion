@@ -12,20 +12,34 @@ import Foundation
 
 typealias FusionStream = AsyncThrowingStream<FusionResult, Error>
 
-// MARK: - Result Type -
+// MARK: - Fusion Result -
 
 public struct FusionResult: FusionResultProtocol, Sendable {
     public private(set) var message: FusionMessage?
-    public private(set) var inbound: Int?
-    public private(set) var outbound: Int?
+    public private(set) var report: FusionReport
     
     /// The `FusionResult`
     /// - Parameters:
     ///   - message: the latest `FusionMessage`
-    ///   - inbound: the received bytes snapshot as `Int`
-    ///   - outbound: the sent bytes snapshot as `Int`
-    init(message: FusionMessage? = nil, inbound: Int? = nil, outbound: Int? = nil) {
+    ///   - report: the latest `FusionReport`
+    init(message: FusionMessage? = nil, report: FusionReport = .init()) {
         self.message = message
+        self.report = report
+    }
+}
+
+// MARK: - Fusion Report -
+
+public struct FusionReport: FusionReportProtocol, Sendable {
+    public private(set) var inbound: Int?
+    public private(set) var outbound: Int?
+    
+    /// The `FusionReport`
+    ///
+    /// - Parameters:
+    ///   - inbound: incoming bytes snapshot as `Int`
+    ///   - outbound: outgoing bytes snapshot as `Int`
+    init(inbound: Int? = nil, outbound: Int? = nil) {
         self.inbound = inbound
         self.outbound = outbound
     }
