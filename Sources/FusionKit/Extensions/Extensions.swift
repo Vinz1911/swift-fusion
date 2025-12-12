@@ -103,7 +103,6 @@ extension Data {
     ///   - length: the length of the payload
     /// - Returns: the `FusionMessage`
     func decode(with opcode: UInt8, from length: UInt32) -> FusionFrame? {
-        let opcode = FusionOpcode(rawValue: opcode)
-        return opcode?.type.decode(from: Data(self.subdata(in: length.payload)))
+        return FusionOpcode(rawValue: opcode)?.type.decode(from: Data(self.subdata(in: length.payload)))
     }
 }
