@@ -1,5 +1,5 @@
 //
-//  FusionPacket.swift
+//  FusionStatic.swift
 //  FusionKit
 //
 //  Created by Vinzenz Weist on 07.06.21.
@@ -10,11 +10,11 @@ import Foundation
 
 // MARK: - Message Flow Control -
 
-/// The `FusionPacket` for protocol constants
-enum FusionPacket: Int, Sendable {
+/// The `FusionStatic` for protocol constants
+enum FusionStatic: Int, Sendable {
     case opcode = 0x1
     case header = 0x5
-    case payload  = 0xFFFFFFFF
+    case total  = 0xFFFFFFFF
 }
 
 /// The `FusionOpcode` for the type classification

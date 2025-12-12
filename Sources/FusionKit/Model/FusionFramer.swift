@@ -21,7 +21,7 @@ actor FusionFramer: FusionFramerProtocol, Sendable {
     /// - Parameter message: the `FusionMessage` conform to the `FusionFrame`
     /// - Returns: the message frame as `Data`
     nonisolated func create<Message: FusionFrame>(message: Message) throws -> Data {
-        guard message.size <= FusionPacket.payload.rawValue else { throw FusionFramerError.outputBufferOverflow }
+        guard message.size <= FusionStatic.total.rawValue else { throw FusionFramerError.outputBufferOverflow }
         var frame = Data(); frame.append(message.opcode); frame.append(UInt32(message.size).endian); frame.append(message.encode)
         return frame
     }
@@ -32,8 +32,8 @@ actor FusionFramer: FusionFramerProtocol, Sendable {
     /// - Returns: a collection of `FusionMessage`s conform to the `FusionFrame` and `Error`
     func parse(data: Data) async throws -> [FusionFrame] {
         var messages: [FusionFrame] = []; buffer.append(data); guard var length = buffer.length() else { return .init() }
-        guard buffer.count <= FusionPacket.payload.rawValue else { throw FusionFramerError.inputBufferOverflow }
-        guard buffer.count >= FusionPacket.header.rawValue, buffer.count >= length else { return .init() }
+        guard buffer.count <= FusionStatic.total.rawValue else { throw FusionFramerError.inputBufferOverflow }
+        guard buffer.count >= FusionStatic.header.rawValue, buffer.count >= length else { return .init() }
         while buffer.count >= length && length != .zero {
             guard let opcode = buffer.first else { throw FusionFramerError.loadOpcodeFailed }
             guard let message = buffer.decode(with: opcode, from: length) else { throw FusionFramerError.decodeMessageFailed }

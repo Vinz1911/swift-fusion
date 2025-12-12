@@ -17,7 +17,7 @@ extension UInt32 {
     
     /// The fusion frame payload range
     var payload: Range<Int> {
-        FusionPacket.header.rawValue..<Int(self)
+        FusionStatic.header.rawValue..<Int(self)
     }
 }
 
@@ -26,7 +26,7 @@ extension UInt32 {
 extension Range {
     /// The fusion frame length range
     static var length: Range<Int> {
-        FusionPacket.opcode.rawValue..<FusionPacket.header.rawValue
+        FusionStatic.opcode.rawValue..<FusionStatic.header.rawValue
     }
 }
 
@@ -75,6 +75,7 @@ extension Data {
     ///
     /// - Parameter leverage: the size of each chunk as `Int`
     func chunks(of leverage: FusionLeverage) -> [Data] {
+        if leverage == .extreme { return [self] }
         let size: Int = Swift.min(leverage.rawValue, Int(UInt16.max / 2))
         return stride(from: .zero, to: count, by: size).map { subdata(in: $0..<(count - $0 > size ? $0 + size : count)) }
     }
@@ -93,7 +94,8 @@ extension Data {
     ///
     /// - Returns: the extracted length as `UInt32
     func length() -> UInt32? {
-        Data(self.subdata(in: .length)).endian
+        guard self.count >= FusionStatic.header.rawValue else { return nil }
+        return Data(self.subdata(in: .length)).endian
     }
     
     /// Decode a `FusionMessage` as `FusionFrame`
