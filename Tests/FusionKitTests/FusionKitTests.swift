@@ -8,7 +8,6 @@
 
 import Testing
 import Foundation
-import Network
 @testable import FusionKit
 
 @Suite("FusionKit Tests")
