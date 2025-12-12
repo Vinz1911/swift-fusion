@@ -1,5 +1,5 @@
 # FusionKit
-The `FusionChannel` is a custom network connector that implements the **Fusion Framing Protocol (FFP)**
+The `FusionConnection` is a custom network connector that implements the **Fusion Framing Protocol (FFP)**
 It is built on top of the standard `Network` framework library. This fast and lightweight custom framing protocol 
 enables high-speed data transmission and provides fine-grained control over network flow.
 
@@ -13,9 +13,9 @@ enables high-speed data transmission and provides fine-grained control over netw
 ### Swift Packages
 
 > [!IMPORTANT]  
-> With the beginning of version 20.0.0 the framework uses an entire new private and public interface.
+> With the beginning of version 2.0.0 the framework uses an entire new private and public interface.
 > The Framework was migrated to use the new structured concurrency based API for safe and easy handling.
-> Below version 20.0.0 can be used for 'old' API interface but will not be actively maintained anymore.
+> Below version 2.0.0 can be used for 'old' API interface but will not be actively maintained anymore.
 
 ```swift
 // ...
@@ -31,11 +31,14 @@ dependencies: [
 // Import the Framework
 import FusionKit
 
-// Create a new channel
-let channel = try FusionChannel(host: "example.com", port: 7878)
+// Create a new connection
+let connection = try FusionConnection(host: "example.com", port: 7878)
 
 // Support for NWProtocolTCP.Options, tls example:
-let channel = try FusionChannel(host: "example.com", port: 7878, parameters: .init(tcp: .init()))
+let connection = try FusionConnection(host: "example.com", port: 7878, parameters: .init(tcp: .init()))
+
+// Start connection
+try await connection.start()
 
 // ...
 ```
@@ -45,8 +48,11 @@ let channel = try FusionChannel(host: "example.com", port: 7878, parameters: .in
 // Import the Framework
 import FusionKit
 
-// Create a new channel
-let channel = try FusionChannel(host: "example.com", port: 7878)
+// Create a new connection
+let connection = try FusionConnection(host: "example.com", port: 7878)
+
+// Start connection
+try await connection.start()
 
 // The framework accepts different kind of messages
 // `String` for text based messages
@@ -68,14 +74,17 @@ try await connection.send(message: UInt16.max)
 // Import the Framework
 import FusionKit
 
-// Create a new channel
-let channel = try FusionChannel(host: "example.com", port: 7878)
+// Create a new connection
+let connection = try FusionConnection(host: "example.com", port: 7878)
+
+// Start connection
+try await connection.start()
 
 // Send message
 try await connection.send(message: "Hello World! 👻")
 
 // Receive message and get report
-for try await result in channel.receive() {
+for try await result in connection.receive() {
     if case .message(let message) = result {
         if let message = message as? String { print(message) }
     }

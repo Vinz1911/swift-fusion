@@ -14,6 +14,20 @@ import Network
 extension UInt32 {
     /// Convert integer to data with bigEndian
     var endian: Data { withUnsafeBytes(of: self.bigEndian) { Data($0) } }
+    
+    /// The fusion frame payload range
+    var payload: Range<Int> {
+        FusionPacket.header.rawValue..<Int(self)
+    }
+}
+
+// MARK: - Range -
+
+extension Range {
+    /// The fusion frame length range
+    static var length: Range<Int> {
+        FusionPacket.opcode.rawValue..<FusionPacket.header.rawValue
+    }
 }
 
 // MARK: - Duration -
@@ -42,14 +56,14 @@ extension NWParameters {
 }
 
 extension NetworkConnection {
-    /// Validate channel establishment
+    /// Validate connection establishment
     ///
-    /// Checks if channel was established otherwise throws error
+    /// Checks if connection was established otherwise throws error
     func timeout(after timeout: Duration = .timeout) async throws -> Void {
         let clock = ContinuousClock(), deadline = clock.now + timeout
         while !Task.isCancelled {
             switch self.state { case .ready: return case .failed(let error), .waiting(let error): throw error default: break }
-            guard clock.now < deadline else { throw FusionChannelError.channelTimeout }; try await clock.sleep(for: .interval)
+            guard clock.now < deadline else { throw FusionConnectionError.connectionTimeout }; try await clock.sleep(for: .interval)
         }
     }
 }
@@ -79,7 +93,7 @@ extension Data {
     ///
     /// - Returns: the extracted length as `UInt32
     func length() -> UInt32? {
-        Data(self.subdata(in: FusionPacket.opcode.rawValue..<FusionPacket.header.rawValue)).endian
+        Data(self.subdata(in: .length)).endian
     }
     
     /// Decode a `FusionMessage` as `FusionFrame`
@@ -89,8 +103,7 @@ extension Data {
     ///   - length: the length of the payload
     /// - Returns: the `FusionMessage`
     func decode(with opcode: UInt8, from length: UInt32) -> FusionFrame? {
-        let payload = Data(self.subdata(in: FusionPacket.header.rawValue..<Int(length)))
-        guard let opcode = FusionOpcode(rawValue: opcode) else { return nil }
-        return switch opcode { case .string: String.decode(from: payload) case .data: Data.decode(from: payload) case .uint16: UInt16.decode(from: payload) }
+        let opcode = FusionOpcode(rawValue: opcode)
+        return opcode?.type.decode(from: Data(self.subdata(in: length.payload)))
     }
 }

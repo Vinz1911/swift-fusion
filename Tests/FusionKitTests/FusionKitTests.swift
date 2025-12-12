@@ -13,7 +13,7 @@ import Network
 
 @Suite("FusionKit Tests")
 struct FusionKitTests {
-    let channel = FusionChannel(using: .hostPort(host: "de0.weist.org", port: 7878))
+    let connection = FusionConnection(using: .hostPort(host: "de0.weist.org", port: 7878))
     
     /// Send `String` message
     @Test("Send String")
@@ -36,18 +36,9 @@ struct FusionKitTests {
     @Test("Famer Error")
     func framerError() async throws {
         let framer = FusionFramer()
-        #expect(throws: FusionFramerError.outputBufferOverflow) {
-            try framer.create(message: Data(count: Int(UInt32.max)))
-        }
-        
-        await #expect(throws: FusionFramerError.inputBufferOverflow) {
-            try await framer.parse(data: Data(count: Int(UInt32.max) + 1))
-        }
-        
-        await #expect(throws: FusionFramerError.decodeMessageFailed) {
-            await framer.clear()
-            let _ = try await framer.parse(data: Data([0x1, 0x0, 0x0, 0x0, 0x6, 0xFF]))
-        }
+        #expect(throws: FusionFramerError.outputBufferOverflow) { try framer.create(message: Data(count: Int(UInt32.max))) }
+        await #expect(throws: FusionFramerError.inputBufferOverflow) { try await framer.parse(data: Data(count: Int(UInt32.max) + 1)) }
+        await #expect(throws: FusionFramerError.decodeMessageFailed) { await framer.clear(); let _ = try await framer.parse(data: Data([0x1, 0x0, 0x0, 0x0, 0x6, 0xFF])) }
     }
     
     /// Create + parse with `FusionFramer`
@@ -63,9 +54,9 @@ struct FusionKitTests {
         
         for message in try await framer.parse(data: frames) { parsed.append(message) }
         
-        if let message = messages[0] as? String, let parse = parsed[0] as? String { print("\(message) == \(parse)"); #expect(message == parse) }
-        if let message = messages[1] as? Data, let parse = parsed[1] as? Data { print("\(message.count) == \(parse.count)"); #expect(message == parse) }
-        if let message = messages[2] as? UInt16, let parse = parsed[2] as? UInt16 { print("\(message) == \(parse)"); #expect(message == parse) }
+        if let message = messages[0] as? String, let parse = parsed[0] as? String { #expect(message == parse) }
+        if let message = messages[1] as? Data, let parse = parsed[1] as? Data { #expect(message == parse) }
+        if let message = messages[2] as? UInt16, let parse = parsed[2] as? UInt16 { #expect(message == parse) }
     }
 }
 
@@ -76,25 +67,13 @@ extension FusionKitTests {
     ///
     /// - Parameter message: message that conforms to `FusionMessage`
     private func sendReceive<Message: FusionMessage>(message: Message) async throws {
-        try await channel.start(); try await channel.send(message: message)
-        for try await result in channel.receive() {
+        try await connection.start(); try await connection.send(message: message)
+        for try await result in connection.receive() {
             guard let messages = result.message else { continue }
-            if message is String {
-                guard let messages = messages as? Data else { continue }
-                print("Received Data: \(messages.count)")
-                #expect(messages.count == Int(message as! String))
-            }
-            if message is Data {
-                guard let messages = messages as? String else { continue }
-                print("Received String: \(messages)")
-                #expect(messages == "\((message as! Data).count)")
-            }
-            if message is UInt16 {
-                guard let messages = messages as? UInt16 else { continue }
-                print("Received UInt16: \(messages)")
-                #expect(messages == message as! UInt16)
-            }
-           await channel.cancel()
+            if message is String { if let messages = messages as? Data { #expect(messages.count == Int(message as! String)) } }
+            if message is Data { if let messages = messages as? String { #expect(messages == "\((message as! Data).count)") } }
+            if message is UInt16 { if let messages = messages as? UInt16 { #expect(messages == message as! UInt16) } }
+            await connection.cancel()
         }
     }
 }

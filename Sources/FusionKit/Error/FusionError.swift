@@ -8,18 +8,18 @@
 
 import Foundation
 
-// MARK: - Fusion Channel Error -
+// MARK: - Fusion Connection Error -
 
-/// The `FusionChannelError` specific errors
+/// The `FusionConnectionError` specific errors
 @frozen
-public enum FusionChannelError: Error, Sendable {
-    case channelTimeout
+public enum FusionConnectionError: Error, Sendable {
+    case connectionTimeout
     case alreadyEstablished
     
     public var description: String {
         switch self {
-        case .alreadyEstablished: "the channel is already established and cannot be established again"
-        case .channelTimeout: "channel run into timeout, failed to establish channel" }
+        case .alreadyEstablished: "the connection is already established and cannot be established again"
+        case .connectionTimeout: "connection run into timeout, failed to establish connection" }
     }
 }
 

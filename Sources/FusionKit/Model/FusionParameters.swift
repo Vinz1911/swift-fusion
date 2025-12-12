@@ -22,11 +22,11 @@ public struct FusionParameters: FusionParametersProtocol, Sendable {
     /// The configurable `FusionParameters`
     ///
     /// - Parameters:
-    ///   - tls: the underlying channel specific `NWProtocolTLS.Options`
-    ///   - tcp: the underlying channel specific `NWProtocolTCP.Options`
+    ///   - tls: the underlying connection specific `NWProtocolTLS.Options`
+    ///   - tcp: the underlying connection specific `NWProtocolTCP.Options`
     ///   - serviceClass: the `NWParameters.ServiceClass`
-    ///   - priority: the `TaskPriority` for the channel
-    ///   - leverage: receive channel leverage `FusionLeverage`
+    ///   - priority: the `TaskPriority` for the connection
+    ///   - leverage: receive connection leverage `FusionLeverage`
     public init(tls: NWProtocolTLS.Options? = nil, tcp: NWProtocolTCP.Options = .init(), serviceClass: NWParameters.ServiceClass = .bestEffort, priority: TaskPriority = .userInitiated, leverage: FusionLeverage = .high) {
         self.tcp = tcp
         self.tls = tls
