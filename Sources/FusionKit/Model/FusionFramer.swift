@@ -20,8 +20,8 @@ actor FusionFramer: FusionFramerProtocol, Sendable {
     ///
     /// - Parameter message: the `FusionMessage` conform to the `FusionFrame`
     /// - Returns: the message frame as `Data`
-    nonisolated func create<Message: FusionFrame>(message: Message) throws -> Data {
-        guard message.size <= FusionStatic.total.rawValue else { throw FusionFramerError.outputBufferOverflow }
+    nonisolated func create<Message: FusionFrame>(message: Message) throws(FusionFramerError) -> Data {
+        guard message.size <= FusionStatic.total.rawValue else { throw .outputBufferOverflow }
         var frame = Data(); frame.append(message.opcode); frame.append(UInt32(message.size).endian); frame.append(message.encode)
         return frame
     }
@@ -30,15 +30,14 @@ actor FusionFramer: FusionFramerProtocol, Sendable {
     ///
     /// - Parameter data: the `Data` slice of the `FusionMessage` conform to the `FusionFrame`
     /// - Returns: a collection of `FusionMessage`s conform to the `FusionFrame` and `Error`
-    func parse(data: Data) async throws -> [FusionFrame] {
-        var messages: [FusionFrame] = []; buffer.append(data); guard var length = buffer.length() else { return .init() }
-        guard buffer.count <= FusionStatic.total.rawValue else { throw FusionFramerError.inputBufferOverflow }
-        guard buffer.count >= FusionStatic.header.rawValue, buffer.count >= length else { return .init() }
-        while buffer.count >= length && length != .zero {
-            guard let opcode = buffer.first else { throw FusionFramerError.loadOpcodeFailed }
-            guard let message = buffer.decode(with: opcode, from: length) else { throw FusionFramerError.decodeMessageFailed }
-            if buffer.count >= length { buffer = buffer.subdata(in: .init(length)..<buffer.count) }
-            if let index = buffer.length() { length = index }; messages.append(message)
+    func parse(data: Data) async throws(FusionFramerError) -> [FusionFrame] {
+        var messages: [FusionFrame] = []; buffer.append(data)
+        guard buffer.count <= FusionStatic.total.rawValue else { throw .inputBufferOverflow }
+        guard buffer.count >= FusionStatic.header.rawValue else { return .init() }
+        while let length = buffer.length(), buffer.count >= length && length != .zero {
+            guard let opcode = buffer.first else { throw .loadOpcodeFailed }
+            guard let message = buffer.decode(with: opcode, from: length) else { throw .decodeMessageFailed }
+            buffer = buffer.subdata(in: .init(length)..<buffer.count); messages.append(message)
         }
         return messages
     }

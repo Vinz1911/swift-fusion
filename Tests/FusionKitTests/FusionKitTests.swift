@@ -32,12 +32,16 @@ struct FusionKitTests {
         try await sendReceive(message: UInt16(16384))
     }
     
+    /// Framer error validation
     @Test("Famer Error")
     func framerError() async throws {
         let framer = FusionFramer()
+        let malformed = Data([1, 0, 0, 0, 1, 0, 0, 0, 10, 80, 97, 115, 115, 33])
+        let invalid = Data([0x1, 0x0, 0x0, 0x0, 0x6, 0xFF])
         #expect(throws: FusionFramerError.outputBufferOverflow) { try framer.create(message: Data(count: Int(UInt32.max))) }
         await #expect(throws: FusionFramerError.inputBufferOverflow) { try await framer.parse(data: Data(count: Int(UInt32.max) + 1)) }
-        await #expect(throws: FusionFramerError.decodeMessageFailed) { await framer.clear(); let _ = try await framer.parse(data: Data([0x1, 0x0, 0x0, 0x0, 0x6, 0xFF])) }
+        await #expect(throws: FusionFramerError.decodeMessageFailed) { await framer.clear(); let _ = try await framer.parse(data: invalid) }
+        await #expect(throws: FusionFramerError.decodeMessageFailed) { await framer.clear(); let _ = try await framer.parse(data: malformed) }
     }
     
     /// Create + parse with `FusionFramer`
@@ -56,6 +60,39 @@ struct FusionKitTests {
         if let message = messages[0] as? String, let parse = parsed[0] as? String { #expect(message == parse) }
         if let message = messages[1] as? Data, let parse = parsed[1] as? Data { #expect(message == parse) }
         if let message = messages[2] as? UInt16, let parse = parsed[2] as? UInt16 { #expect(message == parse) }
+    }
+    
+    /// Robustness check
+    @Test("Parse Incomplete") func parseIncomplete() async throws {
+        let framer = FusionFramer(); var messages: [String] = []
+        var frames = try framer.create(message: "Pass!")
+        let slices: [Data] = [Data([1, 0, 0, 0]), Data([10, 80, 97]), Data([115, 115, 33])]
+        
+        frames.append(contentsOf: slices[0])
+        for message in try await framer.parse(data: frames) { if let message = message as? String { messages.append(message) } }
+        
+        for _ in try await framer.parse(data: slices[1]) { /* nothing to append */ }
+        
+        frames.append(contentsOf: slices[2])
+        for message in try await framer.parse(data: slices[2]) { if let message = message as? String { messages.append(message) } }
+        #expect(messages[0] == messages[1])
+    }
+    
+    /// Zer0 payload
+    @Test("Zero Payload")
+    func zeroPayload() async throws {
+        let framer = FusionFramer()
+        do {
+            let frame = try framer.create(message: Data())
+            let parsed = try await framer.parse(data: frame)
+            #expect(parsed.count == 1); #expect(parsed[0] is Data); #expect((parsed[0] as? Data)?.count == 0)
+        }
+        await framer.clear()
+        do {
+            let frame = try framer.create(message: "")
+            let parsed = try await framer.parse(data: frame)
+            #expect(parsed.count == 1); #expect(parsed[0] is String); #expect((parsed[0] as? String) == "")
+        }
     }
 }
 

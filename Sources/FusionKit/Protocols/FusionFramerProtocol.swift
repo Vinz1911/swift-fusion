@@ -41,11 +41,11 @@ protocol FusionFramerProtocol: Sendable {
     ///
     /// - Parameter message: the `FusionMessage` conform to the `FusionFrame`
     /// - Returns: the message frame as `Data`
-    nonisolated func create<Message: FusionFrame>(message: Message) throws -> Data
+    nonisolated func create<Message: FusionFrame>(message: Message) throws(FusionFramerError) -> Data
     
     /// Parse a `FusionMessage` conform to the `FusionFrame`
     ///
     /// - Parameter data: the `Data` slice of the `FusionMessage` conform to the `FusionFrame`
     /// - Returns: a collection of `FusionMessage`s conform to the `FusionFrame` and `Error`
-    func parse(data: Data) async throws -> [FusionFrame]
+    func parse(data: Data) async throws(FusionFramerError) -> [FusionFrame]
 }

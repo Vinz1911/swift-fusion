@@ -16,8 +16,9 @@ extension UInt32 {
     var endian: Data { withUnsafeBytes(of: self.bigEndian) { Data($0) } }
     
     /// The fusion frame payload range
-    var payload: Range<Int> {
-        FusionStatic.header.rawValue..<Int(self)
+    var payload: Range<Int>? {
+        guard self >= FusionStatic.header.rawValue else { return nil }
+        return FusionStatic.header.rawValue..<Int(self)
     }
 }
 
@@ -105,6 +106,7 @@ extension Data {
     ///   - length: the length of the payload
     /// - Returns: the `FusionMessage`
     func decode(with opcode: UInt8, from length: UInt32) -> FusionFrame? {
-        return FusionOpcode(rawValue: opcode)?.type.decode(from: Data(self.subdata(in: length.payload)))
+        guard let range = length.payload else { return nil }
+        return FusionOpcode(rawValue: opcode)?.type.decode(from: Data(self.subdata(in: range)))
     }
 }
