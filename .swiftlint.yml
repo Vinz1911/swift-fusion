@@ -11,6 +11,5 @@ disabled_rules:
   - redundant_void_return
   - switch_case_alignment
   - empty_enum_arguments
-  - cyclomatic_complexity
   - trailing_whitespace
   - redundant_sendable
