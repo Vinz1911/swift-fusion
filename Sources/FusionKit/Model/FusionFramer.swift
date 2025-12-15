@@ -22,8 +22,9 @@ actor FusionFramer: FusionFramerProtocol, Sendable {
     /// - Returns: the message frame as `Data`
     nonisolated func create<Message: FusionFrame>(message: Message) throws(FusionFramerError) -> Data {
         guard message.size <= FusionStatic.total.rawValue else { throw .outputBufferOverflow }
-        var frame = Data(); frame.append(message.opcode); frame.append(UInt32(message.size).endian); frame.append(message.encode)
-        return frame
+        var frame = Data(); frame.append(message.opcode)
+        frame.append(UInt32(message.size).endian)
+        frame.append(message.encode); return frame
     }
     
     /// Parse a `FusionMessage` conform to the `FusionFrame`
