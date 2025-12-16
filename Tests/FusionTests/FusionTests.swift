@@ -1,6 +1,6 @@
 //
-//  FusionKitTests.swift.swift
-//  FusionKit
+//  FusionTests.swift.swift
+//  Fusion
 //
 //  Created by Vinzenz Weist on 07.06.21.
 //  Copyright © 2021 Vinzenz Weist. All rights reserved.
@@ -8,10 +8,10 @@
 
 import Testing
 import Foundation
-@testable import FusionKit
+@testable import Fusion
 
-@Suite("FusionKit Tests")
-struct FusionKitTests {
+@Suite("Fusion Tests")
+struct FusionTests {
     let connection = FusionConnection(using: .hostPort(host: "de0.weist.org", port: 7878))
     
     /// Send `String` message
@@ -102,7 +102,7 @@ struct FusionKitTests {
 
 // MARK: - Private API Extension -
 
-extension FusionKitTests {
+extension FusionTests {
     /// Perform Send + Receive
     ///
     /// - Parameter message: message that conforms to `FusionMessage`

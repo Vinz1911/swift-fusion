@@ -1,4 +1,4 @@
-# FusionKit
+# Fusion
 The `FusionConnection` is a custom network connector that implements the **Fusion Framing Protocol (FFP)**
 It is built on top of the standard `Network` framework library. This fast and lightweight custom framing protocol 
 enables high-speed data transmission and provides fine-grained control over network flow.
@@ -6,7 +6,7 @@ enables high-speed data transmission and provides fine-grained control over netw
 # Overview
 | Swift Version                                                                                                | License                                                                                                                                              | Coverage                                                                                                                                              |
 |--------------------------------------------------------------------------------------------------------------|------------------------------------------------------------------------------------------------------------------------------------------------------|-------------------------------------------------------------------------------------------------------------------------------------------------------|
-| [![Swift 6.2](https://img.shields.io/badge/Swift-6.2-orange.svg?logo=swift&style=flat)](https://swift.org)   | [![License](https://img.shields.io/badge/license-GPLv3-blue.svg?longCache=true&style=flat)](https://github.com/Vinz1911/FusionKit/blob/main/LICENSE) | [![codecov](https://codecov.io/github/Vinz1911/FusionKit/branch/main/graph/badge.svg?token=EE3S0BOINS)](https://codecov.io/github/Vinz1911/FusionKit) |
+| [![Swift 6.2](https://img.shields.io/badge/Swift-6.2-orange.svg?logo=swift&style=flat)](https://swift.org)   | [![License](https://img.shields.io/badge/license-GPLv3-blue.svg?longCache=true&style=flat)](https://github.com/Vinz1911/swift-fusion/blob/main/LICENSE) | [![codecov](https://codecov.io/github/Vinz1911/swift-fusion/branch/main/graph/badge.svg?token=EE3S0BOINS)](https://codecov.io/github/Vinz1911/swift-fusion) |
 | [![Swift 6.2](https://img.shields.io/badge/SPM-Support-orange.svg?logo=swift&style=flat)](https://swift.org) |                                                                                                                                                      |                                                                                                                                                       |
 
 ## Installation:
@@ -21,7 +21,7 @@ enables high-speed data transmission and provides fine-grained control over netw
 // ...
 dependencies: [
     // Dependencies declare other packages that this package depends on.
-    .package(url: "https://github.com/Vinz1911/FusionKit.git", exact: "20.0.0"),
+    .package(url: "https://github.com/Vinz1911/Fusion.git", exact: "20.0.0"),
 ],
 // ...
 ```
@@ -29,7 +29,7 @@ dependencies: [
 ## Import:
 ```swift
 // Import the Framework
-import FusionKit
+import Fusion
 
 // Create a new connection
 let connection = try FusionConnection(host: "example.com", port: 7878)
@@ -46,7 +46,7 @@ try await connection.start()
 ## Send Messages:
 ```swift
 // Import the Framework
-import FusionKit
+import Fusion
 
 // Create a new connection
 let connection = try FusionConnection(host: "example.com", port: 7878)
@@ -72,7 +72,7 @@ try await connection.send(message: UInt16.max)
 ## Parse Message:
 ```swift
 // Import the Framework
-import FusionKit
+import Fusion
 
 // Create a new connection
 let connection = try FusionConnection(host: "example.com", port: 7878)

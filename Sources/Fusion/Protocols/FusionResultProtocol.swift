@@ -1,6 +1,6 @@
 //
 //  FusionResultProtocol.swift
-//  FusionKit
+//  Fusion
 //
 //  Created by Vinzenz Weist on 10.12.25.
 //
