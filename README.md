@@ -8,14 +8,13 @@ enables high-speed data transmission and provides fine-grained control over netw
 |--------------------------------------------------------------------------------------------------------------|------------------------------------------------------------------------------------------------------------------------------------------------------|-------------------------------------------------------------------------------------------------------------------------------------------------------|
 | [![Swift 6.2](https://img.shields.io/badge/Swift-6.2-orange.svg?logo=swift&style=flat)](https://swift.org)   | [![License](https://img.shields.io/badge/license-GPLv3-blue.svg?longCache=true&style=flat)](https://github.com/Vinz1911/swift-fusion/blob/main/LICENSE) | [![codecov](https://codecov.io/github/Vinz1911/swift-fusion/branch/main/graph/badge.svg?token=EE3S0BOINS)](https://codecov.io/github/Vinz1911/swift-fusion) |
 | [![Swift 6.2](https://img.shields.io/badge/SPM-Support-orange.svg?logo=swift&style=flat)](https://swift.org) |                                                                                                                                                      |                                                                                                                                                       |
-
-## Installation:
-### Swift Packages
-
 > [!IMPORTANT]  
 > With the beginning of version 2.0.0 the framework uses an entire new private and public interface.
 > The Framework was migrated to use the new structured concurrency based API for safe and easy handling.
 > Below version 2.0.0 can be used for 'old' API interface but will not be actively maintained anymore.
+
+## Installation:
+### Swift Packages
 
 ```swift
 // ...
