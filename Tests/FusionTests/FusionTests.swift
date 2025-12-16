@@ -1,17 +1,17 @@
 //
-//  FusionKitTests.swift.swift
-//  FusionKit
+//  FusionTests.swift.swift
+//  Fusion
 //
 //  Created by Vinzenz Weist on 07.06.21.
 //  Copyright © 2021 Vinzenz Weist. All rights reserved.
 //
 
 import XCTest
-@testable import FusionKit
+@testable import Fusion
 
 // MARK: - Tests -
 
-class FusionKitTests: XCTestCase, @unchecked Sendable {
+class FusionTests: XCTestCase, @unchecked Sendable {
     private var channel = FusionChannel(using: .hostPort(host: "de0.weist.org", port: 7878))
     
     /// Initialize Setup
@@ -32,12 +32,12 @@ class FusionKitTests: XCTestCase, @unchecked Sendable {
 
 // MARK: - Private API Extension -
 
-private extension FusionKitTests {
+private extension FusionTests {
     /// Create a channel and start
     ///
     /// - Parameter test: test case
     private func transmit<T: FusionMessage>(message: T) {
-        let exp = XCTestExpectation(description: "FusionKit Send + Receive")
+        let exp = XCTestExpectation(description: "Fusion Send + Receive")
         channel.receive { [weak self] result in guard let self else { return }
             if case .ready = result { channel.send(message: message) }
             if case .failed(let error) = result { XCTFail("failed with error: \(error)")}

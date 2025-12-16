@@ -1,12 +1,12 @@
-# FusionKit
+# Fusion
 
-`FusionKit` is a library which implements the `Fusion Framing Protocol (FFP)`. 
+`Fusion` is a library which implements the `Fusion Framing Protocol (FFP)`. 
 The `Fusion Framing Protocol (FFP)` is proprietary networking protocol which uses a small and lightweight header with a performance as fast as raw tcp performance. Built directly on top of Apples `Network.framework` with support for plain tcp and tls encrypted connections. The implementation for the host is [Fusion](https://github.com/Vinz1911/fusion) written in golang with awesome concurrency support to ensure maximum performance.
 
 # Overview
 | Swift Version                                                                                                | License                                                                                                                                              | Coverage                                                                                                                                              |
 |--------------------------------------------------------------------------------------------------------------|------------------------------------------------------------------------------------------------------------------------------------------------------|-------------------------------------------------------------------------------------------------------------------------------------------------------|
-| [![Swift 6.0](https://img.shields.io/badge/Swift-6.0-orange.svg?logo=swift&style=flat)](https://swift.org)   | [![License](https://img.shields.io/badge/license-GPLv3-blue.svg?longCache=true&style=flat)](https://github.com/Vinz1911/FusionKit/blob/main/LICENSE) | [![codecov](https://codecov.io/github/Vinz1911/FusionKit/branch/main/graph/badge.svg?token=EE3S0BOINS)](https://codecov.io/github/Vinz1911/FusionKit) |
+| [![Swift 6.0](https://img.shields.io/badge/Swift-6.0-orange.svg?logo=swift&style=flat)](https://swift.org)   | [![License](https://img.shields.io/badge/license-GPLv3-blue.svg?longCache=true&style=flat)](https://github.com/Vinz1911/swift-fusion/blob/main/LICENSE) | [![codecov](https://codecov.io/github/Vinz1911/swift-fusion/branch/main/graph/badge.svg?token=EE3S0BOINS)](https://codecov.io/github/Vinz1911/swift-fusion) |
 | [![Swift 6.0](https://img.shields.io/badge/SPM-Support-orange.svg?logo=swift&style=flat)](https://swift.org) |                                                                                                                                                      |                                                                                                                                                       |
 
 ## Installation:
@@ -17,7 +17,7 @@ The `Fusion Framing Protocol (FFP)` is proprietary networking protocol which use
 // ...
 dependencies: [
     // Dependencies declare other packages that this package depends on.
-    .package(url: "https://github.com/Vinz1911/FusionKit.git", from: .init(stringLiteral: "12.0.0")),
+    .package(url: "https://github.com/Vinz1911/swift-fusion.git", from: .init(stringLiteral: "12.0.0")),
 ],
 // ...
 ```
@@ -25,7 +25,7 @@ dependencies: [
 ## Import:
 ```swift
 // import the Framework
-import FusionKit
+import Fusion
 
 // create a new connection
 let connection = FusionChannel(host: "example.com", port: 7878)
@@ -39,7 +39,7 @@ let connection = FusionChannel(host: "example.com", port: 7878, parameters: .tls
 ## State Handler:
 ```swift
 // import the Framework
-import FusionKit
+import Fusion
 
 // create a new connection
 let connection = FusionChannel(host: "example.com", port: 7878)
@@ -63,7 +63,7 @@ connection.start()
 ## Send Messages:
 ```swift
 // import the Framework
-import FusionKit
+import Fusion
 
 // create a new connection
 let connection = FusionChannel(host: "example.com", port: 7878)
@@ -82,7 +82,7 @@ connection.send(message: UInt16.max)
 ## Parse Message:
 ```swift
 // import the Framework
-import FusionKit
+import Fusion
 
 // create a new connection
 let connection = FusionChannel(host: "example.com", port: 7878)

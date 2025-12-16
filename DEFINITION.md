@@ -69,6 +69,7 @@ Control frames enable connection management, such as ping/pong keep-alive signal
 
 Each frame consists of a fixed-length header followed by a variable-length payload.
 
+```text
  Protocol Structure
 +--------+---------+-------------+
 | 0      | 1 2 3 4 | 5 6 7 8 9 N |
@@ -77,6 +78,7 @@ Each frame consists of a fixed-length header followed by a variable-length paylo
 | [0x1]  | [0x4]   |   [...]     |
 |        |         |             |
 +--------+---------+- - - - - - -+
+```
 
 **Fields:**
 
