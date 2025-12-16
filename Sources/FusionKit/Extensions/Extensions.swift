@@ -66,15 +66,6 @@ extension Data {
     }
 }
 
-// MARK: - Range -
-
-extension Range {
-    /// The fusion frame length range
-    static var length: Range<Int> {
-        FusionStatic.opcode.rawValue..<FusionStatic.header.rawValue
-    }
-}
-
 // MARK: - UInt32 -
 
 extension UInt32 {
@@ -96,7 +87,7 @@ extension Data {
     /// - Returns: the extracted length as `UInt32
     func length() throws(FusionFramerError) -> UInt32? {
         guard self.count >= FusionStatic.header.rawValue else { return nil }
-        let length = Data(self.subdata(in: .length)).endian
+        let length = Data(self.subdata(in: FusionStatic.opcode.rawValue..<FusionStatic.header.rawValue)).endian
         if length != .zero { return length } else { throw FusionFramerError.invalid }
     }
     
