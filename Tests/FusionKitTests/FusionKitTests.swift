@@ -38,10 +38,14 @@ struct FusionKitTests {
         let framer = FusionFramer()
         let malformed = Data([1, 0, 0, 0, 1, 0, 0, 0, 10, 80, 97, 115, 115, 33])
         let invalid = Data([0x1, 0x0, 0x0, 0x0, 0x6, 0xFF])
-        #expect(throws: FusionFramerError.outputBufferOverflow) { try framer.create(message: Data(count: Int(UInt32.max))) }
-        await #expect(throws: FusionFramerError.inputBufferOverflow) { try await framer.parse(data: Data(count: Int(UInt32.max) + 1)) }
-        await #expect(throws: FusionFramerError.decodeMessageFailed) { await framer.clear(); let _ = try await framer.parse(data: invalid) }
-        await #expect(throws: FusionFramerError.decodeMessageFailed) { await framer.clear(); let _ = try await framer.parse(data: malformed) }
+        let breakSync = Data([0x01, 0x00, 0x00, 0x00, 0x01, 0xAA, 0x02, 0x00, 0x00, 0x00, 0x01, 0xBB])
+        let zeroLen = Data([0x01, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00])
+        #expect(throws: FusionFramerError.outbound) { try framer.create(message: Data(count: Int(UInt32.max))) }
+        await #expect(throws: FusionFramerError.inbound) { try await framer.parse(data: Data(count: Int(UInt32.max) + 1)) }
+        await #expect(throws: FusionFramerError.invalid) { await framer.clear(); let _ = try await framer.parse(data: zeroLen) }
+        await #expect(throws: FusionFramerError.decode) { await framer.clear(); let _ = try await framer.parse(data: invalid) }
+        await #expect(throws: FusionFramerError.decode) { await framer.clear(); let _ = try await framer.parse(data: malformed) }
+        await #expect(throws: FusionFramerError.decode) { await framer.clear(); let _ = try await framer.parse(data: breakSync) }
     }
     
     /// Create + parse with `FusionFramer`

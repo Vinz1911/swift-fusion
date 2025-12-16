@@ -34,7 +34,7 @@ public actor FusionConnection: FusionConnectionProtocol, Sendable {
     ///
     /// Set config for `NetworkConnection` and establish new connection
     public func start() async throws -> Void {
-        guard connection == nil else { connection = nil; throw FusionConnectionError.alreadyEstablished }
+        guard connection == nil else { connection = nil; throw FusionConnectionError.established }
         let parameter = NWParameters(tls: parameters.tls, tcp: parameters.tcp, serviceClass: parameters.serviceClass)
         connection = NetworkConnection(to: endpoint, using: .parameters(initialParameters: parameter) { TCP() })
         process = Task(priority: parameters.priority) { [weak self] in

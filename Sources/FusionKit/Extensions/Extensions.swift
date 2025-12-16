@@ -9,38 +9,6 @@
 import Foundation
 import Network
 
-// MARK: - UInt32 -
-
-extension UInt32 {
-    /// Convert integer to data with bigEndian
-    var endian: Data { withUnsafeBytes(of: self.bigEndian) { Data($0) } }
-    
-    /// The fusion frame payload range
-    var payload: Range<Int>? {
-        guard self >= FusionStatic.header.rawValue else { return nil }
-        return FusionStatic.header.rawValue..<Int(self)
-    }
-}
-
-// MARK: - Range -
-
-extension Range {
-    /// The fusion frame length range
-    static var length: Range<Int> {
-        FusionStatic.opcode.rawValue..<FusionStatic.header.rawValue
-    }
-}
-
-// MARK: - Duration -
-
-extension Duration {
-    /// Interval time
-    static var interval: Self { .milliseconds(50) }
-    
-    /// Timeout deadline
-    static var timeout: Self { .seconds(4.0) }
-}
-
 // MARK: - Network -
 
 extension NWParameters {
@@ -64,9 +32,19 @@ extension NetworkConnection {
         let clock = ContinuousClock(), deadline = clock.now + timeout
         while !Task.isCancelled {
             switch self.state { case .ready: return case .failed(let error), .waiting(let error): throw error default: break }
-            guard clock.now < deadline else { throw FusionConnectionError.connectionTimeout }; try await clock.sleep(for: .interval)
+            guard clock.now < deadline else { throw FusionConnectionError.timeout }; try await clock.sleep(for: .interval)
         }
     }
+}
+
+// MARK: - Duration -
+
+extension Duration {
+    /// Interval time
+    static var interval: Self { .milliseconds(50) }
+    
+    /// Timeout deadline
+    static var timeout: Self { .seconds(4.0) }
 }
 
 // MARK: - Data -
@@ -88,15 +66,38 @@ extension Data {
     }
 }
 
+// MARK: - Range -
+
+extension Range {
+    /// The fusion frame length range
+    static var length: Range<Int> {
+        FusionStatic.opcode.rawValue..<FusionStatic.header.rawValue
+    }
+}
+
+// MARK: - UInt32 -
+
+extension UInt32 {
+    /// Convert integer to data with bigEndian
+    var endian: Data { withUnsafeBytes(of: self.bigEndian) { Data($0) } }
+    
+    /// The fusion frame payload range
+    var payload: Range<Int>? {
+        guard self >= FusionStatic.header.rawValue else { return nil }
+        return FusionStatic.header.rawValue..<Int(self)
+    }
+}
+
 // MARK: - Fusion Framer Data -
 
 extension Data {
     /// Extract `UInt32` from payload
     ///
     /// - Returns: the extracted length as `UInt32
-    func length() -> UInt32? {
+    func length() throws(FusionFramerError) -> UInt32? {
         guard self.count >= FusionStatic.header.rawValue else { return nil }
-        return Data(self.subdata(in: .length)).endian
+        let length = Data(self.subdata(in: .length)).endian
+        if length != .zero { return length } else { throw FusionFramerError.invalid }
     }
     
     /// Decode a `FusionMessage` as `FusionFrame`

@@ -69,20 +69,22 @@ Control frames enable connection management, such as ping/pong keep-alive signal
 
 Each frame consists of a fixed-length header followed by a variable-length payload.
 
-###  Protocol Structure
-### +--------+---------+-------------+
-### | 0      | 1 2 3 4 | 5 6 7 8 9 N |
-### +--------+---------+-------------+
-### | Opcode | Length  |   Payload   |
-### | [0x1]  | [0x4]   |   [...]     |
-### |        |         |             |
-### +--------+---------+- - - - - - -+
+```text
+ Protocol Structure
++--------+---------+-------------+
+| 0      | 1 2 3 4 | 5 6 7 8 9 N |
++--------+---------+-------------+
+| Opcode | Length  |   Payload   |
+| [0x1]  | [0x4]   |   [...]     |
+|        |         |             |
++--------+---------+- - - - - - -+
+```
 
 **Fields:**
 
 - **Opcode (1 byte):**  
   Identifies the frame type. Values are assigned as follows:
-  - `0x0`: Reserved Frame
+  - `0x0`: Reserved Frame (unused)
   - `0x1`: Text Frame  
   - `0x2`: Binary Frame  
   - `0x3`: Control Frame  

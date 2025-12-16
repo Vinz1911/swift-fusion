@@ -14,9 +14,10 @@ typealias FusionStream = AsyncThrowingStream<FusionResult, Error>
 
 // MARK: - Fusion Result -
 
+@frozen
 public struct FusionResult: FusionResultProtocol, Sendable {
-    public private(set) var message: FusionMessage?
-    public private(set) var report: FusionReport?
+    public let message: FusionMessage?
+    public let report: FusionReport?
     
     /// The `FusionResult`
     /// - Parameters:
@@ -30,9 +31,10 @@ public struct FusionResult: FusionResultProtocol, Sendable {
 
 // MARK: - Fusion Report -
 
+@frozen
 public struct FusionReport: FusionReportProtocol, Sendable {
-    public private(set) var inbound: Int?
-    public private(set) var outbound: Int?
+    public let inbound: Int?
+    public let outbound: Int?
     
     /// The `FusionReport`
     ///

@@ -13,13 +13,13 @@ import Foundation
 /// The `FusionConnectionError` specific errors
 @frozen
 public enum FusionConnectionError: Error, Sendable {
-    case connectionTimeout
-    case alreadyEstablished
+    case established
+    case timeout
     
     public var description: String {
         switch self {
-        case .alreadyEstablished: "the connection is already established and cannot be established again"
-        case .connectionTimeout: "connection run into timeout, failed to establish connection" }
+        case .established: "the connection is already established and cannot be established again"
+        case .timeout: "connection run into timeout, failed to establish connection" }
     }
 }
 
@@ -28,16 +28,18 @@ public enum FusionConnectionError: Error, Sendable {
 /// The `FusionFramerError` specific errors
 @frozen
 public enum FusionFramerError: Error, Sendable {
-    case inputBufferOverflow
-    case outputBufferOverflow
-    case loadOpcodeFailed
-    case decodeMessageFailed
+    case inbound
+    case outbound
+    case invalid
+    case opcode
+    case decode
     
     public var description: String {
         switch self {
-        case .inputBufferOverflow: "input buffer overflow occured while reading from the underlying socket"
-        case .outputBufferOverflow: "output buffer overflow occured while preparing message frame"
-        case .loadOpcodeFailed: "unable to load opcode, discard this frame (this should never happen!)"
-        case .decodeMessageFailed: "unable to decode message, discard this frame" }
+        case .inbound: "inbound buffer overflow occured while reading from the underlying socket"
+        case .outbound: "outbound buffer overflow occured while preparing message frame"
+        case .invalid: "invalid length is not allowed, discard this frame"
+        case .opcode: "unable to extract opcode, discard this frame (this should never happen!)"
+        case .decode: "unable to decode message, discard this frame" }
     }
 }
