@@ -18,6 +18,7 @@ public enum FusionSize: Sendable {
     /// The `FusionSize` raw value
     var rawValue: UInt32 { switch self { case .low: 0x400000 case .medium: 0x800000 case .high: 0x1000000 case .custom(let size): size } }
 }
+
 // MARK: - Message Flow Control -
 
 /// The `FusionStatic` for protocol constants
