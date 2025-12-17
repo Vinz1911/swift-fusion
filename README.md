@@ -1,4 +1,4 @@
-# Fusion
+# Swift Fusion
 The `FusionConnection` is a custom network connector that implements the **Fusion Framing Protocol (FFP)**
 It is built on top of the standard `Network` framework library. This fast and lightweight custom framing protocol 
 enables high-speed data transmission and provides fine-grained control over network flow.
@@ -97,6 +97,3 @@ for try await result in connection.receive() {
     }
 }
 ```
-
-## Author:
-👨🏼‍💻 [Vinzenz Weist](https://github.com/Vinz1911)
