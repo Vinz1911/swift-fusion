@@ -37,11 +37,13 @@ protocol FusionFramerProtocol: Sendable {
     /// Current message buffer will be cleared
     func clear() async -> Void
     
-    /// Create a `FusionMessage` conform to the `FusionFrame`
+    /// Create a `FusionMessage` conform frame
     ///
-    /// - Parameter message: the `FusionMessage` conform to the `FusionFrame`
+    /// - Parameters:
+    ///   - message: generic type which conforms to `FusionMessage`
+    ///   - ceiling: the inbound buffer size limit from `FusionCeiling`
     /// - Returns: the message frame as `Data`
-    nonisolated func create<Message: FusionFrame>(message: Message) throws(FusionFramerError) -> Data
+    nonisolated func create<Message: FusionFrame>(message: Message, ceiling: FusionCeiling) throws(FusionFramerError) -> Data
     
     /// Parse a `FusionMessage` conform to the `FusionFrame`
     ///

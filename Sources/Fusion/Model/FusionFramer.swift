@@ -16,15 +16,16 @@ actor FusionFramer: FusionFramerProtocol, Sendable {
     /// Current message buffer will be cleared
     func clear() async -> Void { self.buffer.removeAll() }
     
-    /// Create a `FusionMessage` conform to the `FusionFrame`
+    /// Create a `FusionMessage` conform frame
     ///
-    /// - Parameter message: the `FusionMessage` conform to the `FusionFrame`
+    /// - Parameters:
+    ///   - message: generic type which conforms to `FusionMessage`
+    ///   - ceiling: the inbound buffer size limit from `FusionCeiling`
     /// - Returns: the message frame as `Data`
-    nonisolated func create<Message: FusionFrame>(message: Message) throws(FusionFramerError) -> Data {
-        guard message.size <= FusionStatic.total.rawValue else { throw .outbound }
-        var frame = Data(); frame.append(message.opcode)
-        frame.append(UInt32(message.size).endian)
-        frame.append(message.encode); return frame
+    nonisolated func create<Message: FusionFrame>(message: Message, ceiling: FusionCeiling = .unlimited) throws(FusionFramerError) -> Data {
+        guard message.size <= FusionStatic.total.rawValue, message.size <= ceiling.rawValue else { throw .outbound }
+        var frame = Data(); frame.append(message.opcode); frame.append(UInt32(message.size).endian); frame.append(message.encode)
+        return frame
     }
     
     /// Parse a `FusionMessage` conform to the `FusionFrame`

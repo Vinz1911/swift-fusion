@@ -73,7 +73,7 @@ private extension FusionConnection {
     /// - Parameter message: the message conform to `FusionMessage`
     private func processing<Message: FusionMessage>(with message: Message) async throws -> Void {
         guard let connection, let message = message as? FusionFrame else { return }
-        let frame = try framer.create(message: message)
+        let frame = try framer.create(message: message, ceiling: parameters.ceiling)
         for chunk in frame.chunks(of: parameters.leverage) {
             try await connection.send(chunk); continuation.yield(.init(report: .init(outbound: chunk.count)))
         }
