@@ -12,7 +12,7 @@ import XCTest
 // MARK: - Tests -
 
 class FusionTests: XCTestCase, @unchecked Sendable {
-    private var channel = FusionChannel(using: .hostPort(host: "de0.weist.org", port: 7878))
+    private var channel = FusionConnection(using: .hostPort(host: "de0.weist.org", port: 7878))
     
     /// Initialize Setup
     override func setUp() { super.setUp() }

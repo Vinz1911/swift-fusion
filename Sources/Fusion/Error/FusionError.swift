@@ -14,9 +14,9 @@ public protocol FusionError: Error, Sendable { }
 
 // MARK: - Fusion Channel Error -
 
-/// The `FusionChannelError` specific errors
+/// The `FusionConnectionError` specific errors
 @frozen
-public enum FusionChannelError: FusionError, Error, Sendable {
+public enum FusionConnectionError: FusionError, Error, Sendable {
     case invalidEndpoint
     case channelTimeout
     

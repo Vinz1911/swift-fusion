@@ -1,5 +1,5 @@
 //
-//  FusionChannelProtocol.swift
+//  FusionConnectionProtocol.swift
 //  Fusion
 //
 //  Created by Vinzenz Weist on 07.06.21.
@@ -9,8 +9,8 @@
 import Foundation
 import Network
 
-public protocol FusionChannelProtocol: Sendable {
-    /// The `FusionChannel` is a custom network connector that implements the **Fusion Framing Protocol (FFP)**.
+public protocol FusionConnectionProtocol: Sendable {
+    /// The `FusionConnection` is a custom network connector that implements the **Fusion Framing Protocol (FFP)**.
     /// It is built on top of the standard `Network` framework library. This fast and lightweight custom framing protocol
     /// enables high-speed data transmission and provides fine-grained control over network flow.
     ///
@@ -21,12 +21,12 @@ public protocol FusionChannelProtocol: Sendable {
     
     /// Start to establishing a new channel
     ///
-    /// Establish a new `FusionChannel` to a compatible booststrap
+    /// Establish a new `FusionConnection` to a compatible booststrap
     func start() -> Void
     
     /// Cancel an active channel
     ///
-    /// The current active `FusionChannel` will be terminated
+    /// The current active `FusionConnection` will be terminated
     func cancel() -> Void
     
     /// Send a `FusionMessage` to a connected bootstraped

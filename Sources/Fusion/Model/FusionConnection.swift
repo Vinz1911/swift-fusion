@@ -1,5 +1,5 @@
 //
-//  FusionChannel.swift
+//  FusionConnection.swift
 //  Fusion
 //
 //  Created by Vinzenz Weist on 07.06.21.
@@ -9,7 +9,7 @@
 import Foundation
 import Network
 
-public final class FusionChannel: FusionChannelProtocol, @unchecked Sendable {
+public final class FusionConnection: FusionConnectionProtocol, @unchecked Sendable {
     private var result: FusionBridge = { _ in }
     private var timer: DispatchSourceTimer?
     
@@ -18,7 +18,7 @@ public final class FusionChannel: FusionChannelProtocol, @unchecked Sendable {
     private let leverage: FusionLeverage
     private let channel: NWConnection
     
-    /// The `FusionChannel` is a custom network connector that implements the **Fusion Framing Protocol (FFP)**.
+    /// The `FusionConnection` is a custom network connector that implements the **Fusion Framing Protocol (FFP)**.
     /// It is built on top of the standard `Network` framework library. This fast and lightweight custom framing protocol
     /// enables high-speed data transmission and provides fine-grained control over network flow.
     ///
@@ -33,19 +33,19 @@ public final class FusionChannel: FusionChannelProtocol, @unchecked Sendable {
     
     /// Start to establishing a new channel
     ///
-    /// Establish a new `FusionChannel` to a compatible booststrap
+    /// Establish a new `FusionConnection` to a compatible booststrap
     public func start() -> Void {
         channel.stateUpdateHandler = { [weak self] state in
             if case .ready = state { self?.result(.ready) }
             if case .failed(let error) = state { self?.result(.failed(error)) }
         }
         processing(); channel.start(queue: queue)
-        channel.timeout { [weak self] in self?.result(.failed(FusionChannelError.channelTimeout)) }
+        channel.timeout { [weak self] in self?.result(.failed(FusionConnectionError.channelTimeout)) }
     }
     
     /// Cancel an active channel
     ///
-    /// The current active `FusionChannel` will be terminated
+    /// The current active `FusionConnection` will be terminated
     public func cancel() -> Void {
         queue.async { [weak self] in self?.channel.cancel(); self?.framer.reset() }
     }
@@ -67,7 +67,7 @@ public final class FusionChannel: FusionChannelProtocol, @unchecked Sendable {
 
 // MARK: - Private API -
 
-private extension FusionChannel {
+private extension FusionConnection {
     /// Send `Data` from a created generic `FusionMessage`
     ///
     /// - Parameter content: the generic `FusionMessage` to send
@@ -85,7 +85,7 @@ private extension FusionChannel {
     
     /// Receive `Data` and parse it into a generic `FusionMessage`
     ///
-    /// The parsed `FusionMessage` from the current established `FusionChannel`
+    /// The parsed `FusionMessage` from the current established `FusionConnection`
     private func processing() -> Void {
         channel.batch {
             channel.receiveDiscontiguous(minimumIncompleteLength: .minimum, maximumLength: leverage.rawValue) { [weak self] content, _, isComplete, error in
