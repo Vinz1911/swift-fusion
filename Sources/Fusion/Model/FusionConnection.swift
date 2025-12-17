@@ -86,7 +86,7 @@ private extension FusionConnection {
         while !Task.isCancelled { guard let connection else { return }
             let (data, _) = try await connection.receive(atMost: parameters.leverage.rawValue)
             continuation.yield(.init(report: .init(inbound: data.count)))
-            let messages = try await self.framer.parse(data: data, size: parameters.size)
+            let messages = try await self.framer.parse(slice: data, size: parameters.size)
             for message in messages { continuation.yield(.init(message: message)) }
         }
     }

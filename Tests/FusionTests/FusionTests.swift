@@ -41,12 +41,12 @@ struct FusionTests {
         let breakSync = Data([0x01, 0x00, 0x00, 0x00, 0x01, 0xAA, 0x02, 0x00, 0x00, 0x00, 0x01, 0xBB])
         let zeroLen = Data([0x01, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00])
         #expect(throws: FusionFramerError.outbound) { try framer.create(message: Data(count: Int(UInt32.max))) }
-        await #expect(throws: FusionFramerError.inbound) { try await framer.parse(data: Data(count: Int(UInt32.max) + 1)) }
-        await #expect(throws: FusionFramerError.inbound) { await framer.clear(); let _ = try await framer.parse(data: Data(count: Int(FusionSize.high.rawValue)), size: .low) }
-        await #expect(throws: FusionFramerError.invalid) { await framer.clear(); let _ = try await framer.parse(data: zeroLen) }
-        await #expect(throws: FusionFramerError.decode) { await framer.clear(); let _ = try await framer.parse(data: invalid) }
-        await #expect(throws: FusionFramerError.decode) { await framer.clear(); let _ = try await framer.parse(data: malformed) }
-        await #expect(throws: FusionFramerError.decode) { await framer.clear(); let _ = try await framer.parse(data: breakSync) }
+        await #expect(throws: FusionFramerError.inbound) { try await framer.parse(slice: Data(count: Int(UInt32.max) + 1)) }
+        await #expect(throws: FusionFramerError.inbound) { await framer.clear(); let _ = try await framer.parse(slice: Data(count: Int(FusionSize.high.rawValue)), size: .low) }
+        await #expect(throws: FusionFramerError.invalid) { await framer.clear(); let _ = try await framer.parse(slice: zeroLen) }
+        await #expect(throws: FusionFramerError.decode) { await framer.clear(); let _ = try await framer.parse(slice: invalid) }
+        await #expect(throws: FusionFramerError.decode) { await framer.clear(); let _ = try await framer.parse(slice: malformed) }
+        await #expect(throws: FusionFramerError.decode) { await framer.clear(); let _ = try await framer.parse(slice: breakSync) }
     }
     
     /// Create + parse with `FusionFramer`
@@ -60,7 +60,7 @@ struct FusionTests {
         frames.append(try framer.create(message: messages[1]))
         frames.append(try framer.create(message: messages[2]))
         
-        for message in try await framer.parse(data: frames) { parsed.append(message) }
+        for message in try await framer.parse(slice: frames) { parsed.append(message) }
         
         if let message = messages[0] as? String, let parse = parsed[0] as? String { #expect(message == parse) }
         if let message = messages[1] as? Data, let parse = parsed[1] as? Data { #expect(message == parse) }
@@ -74,12 +74,12 @@ struct FusionTests {
         let slices: [Data] = [Data([1, 0, 0, 0]), Data([10, 80, 97]), Data([115, 115, 33])]
         
         frames.append(contentsOf: slices[0])
-        for message in try await framer.parse(data: frames) { if let message = message as? String { messages.append(message) } }
+        for message in try await framer.parse(slice: frames) { if let message = message as? String { messages.append(message) } }
         
-        for _ in try await framer.parse(data: slices[1]) { /* nothing to append */ }
+        for _ in try await framer.parse(slice: slices[1]) { /* nothing to append */ }
         
         frames.append(contentsOf: slices[2])
-        for message in try await framer.parse(data: slices[2]) { if let message = message as? String { messages.append(message) } }
+        for message in try await framer.parse(slice: slices[2]) { if let message = message as? String { messages.append(message) } }
         #expect(messages[0] == messages[1])
     }
     
@@ -89,13 +89,13 @@ struct FusionTests {
         let framer = FusionFramer()
         do {
             let frame = try framer.create(message: Data())
-            let parsed = try await framer.parse(data: frame)
+            let parsed = try await framer.parse(slice: frame)
             #expect(parsed.count == 1); #expect(parsed[0] is Data); #expect((parsed[0] as? Data)?.count == 0)
         }
         await framer.clear()
         do {
             let frame = try framer.create(message: "")
-            let parsed = try await framer.parse(data: frame)
+            let parsed = try await framer.parse(slice: frame)
             #expect(parsed.count == 1); #expect(parsed[0] is String); #expect((parsed[0] as? String) == "")
         }
     }
