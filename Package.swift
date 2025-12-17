@@ -4,7 +4,7 @@
 import PackageDescription
 
 let package = Package(
-    name: "Fusion",
+    name: "swift-fusion",
     platforms: [
         .iOS(.v18), .macOS(.v15),
     ],

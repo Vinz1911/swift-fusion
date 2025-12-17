@@ -23,7 +23,7 @@ jobs:
           swift test --enable-code-coverage
       - name: ✍️ Generate Coverage Report
         run: |
-          xcrun llvm-cov export -format="lcov" .build/debug/FusionKitPackageTests.xctest/Contents/MacOS/FusionKitPackageTests -instr-profile .build/debug/codecov/default.profdata > info.lcov
+          xcrun llvm-cov export -format="lcov" .build/debug/FusionPackageTests.xctest/Contents/MacOS/FusionPackageTests -instr-profile .build/debug/codecov/default.profdata > info.lcov
       - name: ✅ Upload coverage to Codecov
         uses: codecov/codecov-action@v3
         with:
