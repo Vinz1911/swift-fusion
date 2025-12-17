@@ -20,12 +20,32 @@ jobs:
           xcode-version: '16.1'
       - name: 🛠️ Build and Test with Code Coverage
         run: |
+          set -euo pipefail
           swift test --enable-code-coverage
+
       - name: ✍️ Generate Coverage Report
         run: |
-          xcrun llvm-cov export -format="lcov" .build/debug/FusionKitPackageTests.xctest/Contents/MacOS/FusionKitPackageTests -instr-profile .build/debug/codecov/default.profdata > info.lcov
+          set -euo pipefail
+
+          # Find the test bundle executable (more robust than hardcoding the path)
+          TEST_EXE="$(find .build -path '*PackageTests.xctest/Contents/MacOS/*' -type f -maxdepth 6 | head -n 1)"
+          if [ -z "${TEST_EXE}" ]; then
+            echo "Could not find test executable under .build"
+            find .build -maxdepth 6 -type d -name '*xctest' -print || true
+            exit 1
+          fi
+
+          PROF_DATA=".build/debug/codecov/default.profdata"
+          if [ ! -f "${PROF_DATA}" ]; then
+            echo "Could not find profdata at ${PROF_DATA}"
+            find .build -type f -name '*.profdata' -print || true
+            exit 1
+          fi
+
+          xcrun llvm-cov export -format="lcov" "${TEST_EXE}" -instr-profile "${PROF_DATA}" > info.lcov
+
       - name: ✅ Upload coverage to Codecov
-        uses: codecov/codecov-action@v3
+        uses: codecov/codecov-action@v5
         with:
           token: ${{ secrets.CODECOV_TOKEN }}
           files: info.lcov
