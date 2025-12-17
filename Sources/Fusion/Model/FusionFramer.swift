@@ -39,6 +39,7 @@ actor FusionFramer: FusionFramerProtocol, Sendable {
             guard let opcode = buffer.first else { throw .opcode }
             guard let message = buffer.decode(with: opcode, from: length) else { throw .decode }
             buffer.removeSubrange(.zero..<Int(length)); messages.append(message)
-        }; return messages
+        }
+        return messages
     }
 }

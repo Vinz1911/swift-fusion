@@ -98,6 +98,21 @@ struct FusionTests {
             #expect(parsed.count == 1); #expect(parsed[0] is String); #expect((parsed[0] as? String) == "")
         }
     }
+    
+    /// Error description
+    @Test("Error description")
+    func errorDescription() async throws {
+        do {
+            var count = 0
+            for state in FusionConnectionError.allCases { count += 1; #expect(!state.description.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty) }
+            #expect(count == FusionConnectionError.allCases.count)
+        }
+        do {
+            var count = 0
+            for state in FusionFramerError.allCases { count += 1; #expect(!state.description.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty) }
+            #expect(count == FusionFramerError.allCases.count)
+        }
+    }
 }
 
 // MARK: - Private API Extension -
