@@ -29,5 +29,5 @@ public protocol FusionParametersProtocol: Sendable {
     ///   - priority: the `TaskPriority` for the connection
     ///   - size: the `FusionSize` to limit frame size
     ///   - leverage: receive connection leverage `FusionLeverage`
-    init(parameters: NWParameters, priority: TaskPriority, size: FusionSize, leverage: FusionLeverage)
+    init(with parameters: NWParameters, priority: TaskPriority, size: FusionSize, leverage: FusionLeverage)
 }

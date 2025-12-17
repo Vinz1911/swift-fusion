@@ -25,7 +25,7 @@ public struct FusionParameters: FusionParametersProtocol, Sendable {
     ///   - priority: the `TaskPriority` for the connection
     ///   - size: the `FusionSize` to limit frame size
     ///   - leverage: receive connection leverage `FusionLeverage`
-    public init(parameters: NWParameters = .tcp, priority: TaskPriority = .userInitiated, size: FusionSize = .medium, leverage: FusionLeverage = .high) {
+    public init(with parameters: NWParameters = .tcp, priority: TaskPriority = .userInitiated, size: FusionSize = .medium, leverage: FusionLeverage = .high) {
         self.parameters = parameters
         self.priority = priority
         self.size = size
