@@ -8,6 +8,16 @@
 
 import Foundation
 
+/// The `FusionSize` to limit frame size
+public enum FusionSize: Sendable {
+    case low
+    case medium
+    case high
+    case custom(UInt32)
+    
+    /// The `FusionSize` raw value
+    var rawValue: UInt32 { switch self { case .low: 0x400000 case .medium: 0x800000 case .high: 0x1000000 case .custom(let size): size } }
+}
 // MARK: - Message Flow Control -
 
 /// The `FusionStatic` for protocol constants
@@ -22,6 +32,8 @@ enum FusionOpcode: UInt8, Sendable {
     case string = 0x1
     case data   = 0x2
     case uint16 = 0x3
+    
+    /// The `FusionOpcode`type mapping
     var type: any FusionFrame.Type { switch self { case .string: String.self case .data: Data.self case .uint16: UInt16.self } }
 }
 

@@ -13,25 +13,22 @@ import Network
 
 @frozen
 public struct FusionParameters: FusionParametersProtocol, Sendable {
-    public var tls: NWProtocolTLS.Options?
-    public var tcp: NWProtocolTCP.Options
-    public var serviceClass: NWParameters.ServiceClass
+    public var parameters: NWParameters
     public var priority: TaskPriority
+    public var size: FusionSize
     public var leverage: FusionLeverage
     
     /// The configurable `FusionParameters`
     ///
     /// - Parameters:
-    ///   - tls: the underlying connection specific `NWProtocolTLS.Options`
-    ///   - tcp: the underlying connection specific `NWProtocolTCP.Options`
-    ///   - serviceClass: the `NWParameters.ServiceClass`
+    ///   - parameters: the underlying `NWParameters`
     ///   - priority: the `TaskPriority` for the connection
+    ///   - size: the `FusionSize` to limit frame size
     ///   - leverage: receive connection leverage `FusionLeverage`
-    public init(tls: NWProtocolTLS.Options? = nil, tcp: NWProtocolTCP.Options = .init(), serviceClass: NWParameters.ServiceClass = .bestEffort, priority: TaskPriority = .userInitiated, leverage: FusionLeverage = .high) {
-        self.tcp = tcp
-        self.tls = tls
+    public init(parameters: NWParameters = .tcp, priority: TaskPriority = .userInitiated, size: FusionSize = .medium, leverage: FusionLeverage = .high) {
+        self.parameters = parameters
         self.priority = priority
+        self.size = size
         self.leverage = leverage
-        self.serviceClass = serviceClass
     }
 }

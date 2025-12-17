@@ -35,8 +35,7 @@ public actor FusionConnection: FusionConnectionProtocol, Sendable {
     /// Set config for `NetworkConnection` and establish new connection
     public func start() async throws -> Void {
         guard connection == nil else { connection = nil; throw FusionConnectionError.established }
-        let parameter = NWParameters(tls: parameters.tls, tcp: parameters.tcp, serviceClass: parameters.serviceClass)
-        connection = NetworkConnection(to: endpoint, using: .parameters(initialParameters: parameter) { TCP() })
+        connection = NetworkConnection(to: endpoint, using: .parameters(initialParameters: parameters.parameters) { TCP() })
         process = Task(priority: parameters.priority) { [weak self] in
             do { try await self?.processing() } catch { self?.continuation.finish(throwing: error) }
         }
@@ -87,7 +86,7 @@ private extension FusionConnection {
         while !Task.isCancelled { guard let connection else { return }
             let (data, _) = try await connection.receive(atMost: parameters.leverage.rawValue)
             continuation.yield(.init(report: .init(inbound: data.count)))
-            let messages = try await self.framer.parse(data: data)
+            let messages = try await self.framer.parse(data: data, size: parameters.size)
             for message in messages { continuation.yield(.init(message: message)) }
         }
     }

@@ -11,19 +11,6 @@ import Network
 
 // MARK: - Network -
 
-extension NWParameters {
-    /// Creates a parameters object that is configured for TLS and TCP.
-    ///
-    /// - Parameters:
-    ///   - tls: TLS options or nil for no TLS
-    ///   - tcp: TCP options. Defaults to NWProtocolTCP.Options() with no options overridden.
-    ///   - serviceClass: ServiceClass. Default is best effort.
-    convenience init(tls: NWProtocolTLS.Options?, tcp: NWProtocolTCP.Options, serviceClass: NWParameters.ServiceClass = .bestEffort) {
-        self.init(tls: tls, tcp: tcp)
-        self.serviceClass = serviceClass
-    }
-}
-
 extension NetworkConnection {
     /// Validate connection establishment
     ///

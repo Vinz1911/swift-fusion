@@ -10,14 +10,14 @@ import Foundation
 import Network
 
 public protocol FusionParametersProtocol: Sendable {
-    /// underlying connection specific `NWProtocolTLS.Options`
-    var tls: NWProtocolTLS.Options? { get set }
-    
-    /// underlying connection specific `NWProtocolTCP.Options`
-    var tcp: NWProtocolTCP.Options { get set }
+    /// the underlying `NWParameters`
+    var parameters: NWParameters { get set }
     
     /// the `TaskPriority` for the connection
     var priority: TaskPriority { get set }
+    
+    /// the maximum parser limit as `UInt32`
+    var size: FusionSize { get set }
     
     /// receive connection leverage `FusionLeverage`
     var leverage: FusionLeverage { get set }
@@ -25,10 +25,9 @@ public protocol FusionParametersProtocol: Sendable {
     /// The configurable `FusionParameters`
     ///
     /// - Parameters:
-    ///   - tls: the underlying connection specific `NWProtocolTLS.Options`
-    ///   - tcp: the underlying connection specific `NWProtocolTCP.Options`
-    ///   - serviceClass: the `NWParameters.ServiceClass`
+    ///   - parameters: the underlying `NWParameters`
     ///   - priority: the `TaskPriority` for the connection
+    ///   - size: the `FusionSize` to limit frame size
     ///   - leverage: receive connection leverage `FusionLeverage`
-    init(tls: NWProtocolTLS.Options?, tcp: NWProtocolTCP.Options, serviceClass: NWParameters.ServiceClass, priority: TaskPriority, leverage: FusionLeverage)
+    init(parameters: NWParameters, priority: TaskPriority, size: FusionSize, leverage: FusionLeverage)
 }
