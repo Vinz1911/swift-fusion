@@ -13,7 +13,7 @@ public protocol FusionResultProtocol: Sendable {
     /// The latest `FusionMessage`
     var message: FusionMessage? { get }
     
-    /// the latest `FusionReport`
+    /// The latest `FusionReport`
     var report: FusionReport? { get }
 }
 

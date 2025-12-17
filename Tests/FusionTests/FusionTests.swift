@@ -41,8 +41,8 @@ struct FusionTests {
         let breakSync = Data([0x01, 0x00, 0x00, 0x00, 0x01, 0xAA, 0x02, 0x00, 0x00, 0x00, 0x01, 0xBB])
         let zeroLen = Data([0x01, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00])
         #expect(throws: FusionFramerError.outbound) { try framer.create(message: Data(count: Int(UInt32.max))) }
-        await #expect(throws: FusionFramerError.inbound) { try await framer.parse(slice: Data(count: Int(UInt32.max) + 1)) }
-        await #expect(throws: FusionFramerError.inbound) { await framer.clear(); let _ = try await framer.parse(slice: Data(count: Int(FusionSize.high.rawValue)), size: .low) }
+        await #expect(throws: FusionFramerError.inbound) { await framer.clear(); let _ = try await framer.parse(slice: Data(count: Int(UInt32.max) + 1)) }
+        await #expect(throws: FusionFramerError.inbound) { await framer.clear(); let _ = try await framer.parse(slice: Data(count: Int(FusionCeiling.high.rawValue)), ceiling: .low) }
         await #expect(throws: FusionFramerError.invalid) { await framer.clear(); let _ = try await framer.parse(slice: zeroLen) }
         await #expect(throws: FusionFramerError.decode) { await framer.clear(); let _ = try await framer.parse(slice: invalid) }
         await #expect(throws: FusionFramerError.decode) { await framer.clear(); let _ = try await framer.parse(slice: malformed) }

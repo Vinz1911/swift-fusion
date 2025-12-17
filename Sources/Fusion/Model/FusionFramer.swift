@@ -31,11 +31,11 @@ actor FusionFramer: FusionFramerProtocol, Sendable {
     ///
     /// - Parameters:
     ///   - slice: the `Data` slice of the `FusionMessage` conform to the `FusionFrame`
-    ///   - size: the inbound buffer size limit from `FusionSize`
+    ///   - ceiling: the inbound buffer size limit from `FusionCeiling`
     /// - Returns: a collection of `FusionMessage`s conform to the `FusionFrame` and `Error`
-    func parse(slice: Data, size: FusionSize = .high) async throws(FusionFramerError) -> [FusionFrame] {
+    func parse(slice: Data, ceiling: FusionCeiling = .unlimited) async throws(FusionFramerError) -> [FusionFrame] {
         var messages: [FusionFrame] = []; buffer.append(slice)
-        guard buffer.count <= FusionStatic.total.rawValue, buffer.count <= size.rawValue else { throw .inbound }
+        guard buffer.count <= FusionStatic.total.rawValue, buffer.count <= ceiling.rawValue else { throw .inbound }
         guard buffer.count >= FusionStatic.header.rawValue else { return .init() }
         while let length = try buffer.length(), buffer.count >= length && length != .zero {
             guard let opcode = buffer.first else { throw .opcode }

@@ -10,16 +10,16 @@ import Foundation
 import Network
 
 public protocol FusionParametersProtocol: Sendable {
-    /// the underlying `NWParameters`
+    /// The underlying `NWParameters`
     var parameters: NWParameters { get }
     
-    /// the `TaskPriority` for the connection
+    /// The `TaskPriority` for the connection
     var priority: TaskPriority { get }
     
-    /// the maximum parser limit as `UInt32`
-    var size: FusionSize { get }
+    /// The `FusionCeiling` to limit frame size
+    var ceiling: FusionCeiling { get }
     
-    /// receive connection leverage `FusionLeverage`
+    /// The `FusionLeverage` to limit data slices
     var leverage: FusionLeverage { get }
     
     /// The configurable `FusionParameters`
@@ -27,7 +27,7 @@ public protocol FusionParametersProtocol: Sendable {
     /// - Parameters:
     ///   - parameters: the underlying `NWParameters`
     ///   - priority: the `TaskPriority` for the connection
-    ///   - size: the `FusionSize` to limit frame size
-    ///   - leverage: receive connection leverage `FusionLeverage`
-    init(with parameters: NWParameters, priority: TaskPriority, size: FusionSize, leverage: FusionLeverage)
+    ///   - ceiling: the `FusionCeiling` to limit frame size
+    ///   - leverage: the `FusionLeverage` to limit data slices
+    init(with parameters: NWParameters, priority: TaskPriority, ceiling: FusionCeiling, leverage: FusionLeverage)
 }

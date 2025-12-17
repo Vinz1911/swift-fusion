@@ -84,9 +84,9 @@ private extension FusionConnection {
     /// Exposes the parsed `FusionMessage` and the `FusionReport`
     private func processing() async throws -> Void {
         while !Task.isCancelled { guard let connection else { return }
-            let (data, _) = try await connection.receive(atMost: parameters.leverage.rawValue)
+            let (data, _) = try await connection.receive(atMost: Int(parameters.leverage.rawValue))
             continuation.yield(.init(report: .init(inbound: data.count)))
-            let messages = try await self.framer.parse(slice: data, size: parameters.size)
+            let messages = try await self.framer.parse(slice: data, ceiling: parameters.ceiling)
             for message in messages { continuation.yield(.init(message: message)) }
         }
     }

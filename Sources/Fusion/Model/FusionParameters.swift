@@ -15,7 +15,7 @@ import Network
 public struct FusionParameters: FusionParametersProtocol, Sendable {
     public let parameters: NWParameters
     public let priority: TaskPriority
-    public let size: FusionSize
+    public let ceiling: FusionCeiling
     public let leverage: FusionLeverage
     
     /// The configurable `FusionParameters`
@@ -23,12 +23,12 @@ public struct FusionParameters: FusionParametersProtocol, Sendable {
     /// - Parameters:
     ///   - parameters: the underlying `NWParameters`
     ///   - priority: the `TaskPriority` for the connection
-    ///   - size: the `FusionSize` to limit frame size
-    ///   - leverage: receive connection leverage `FusionLeverage`
-    public init(with parameters: NWParameters = .tcp, priority: TaskPriority = .userInitiated, size: FusionSize = .medium, leverage: FusionLeverage = .high) {
+    ///   - ceiling: the `FusionCeiling` to limit frame size
+    ///   - leverage: the `FusionLeverage` to limit data slices
+    public init(with parameters: NWParameters = .tcp, priority: TaskPriority = .userInitiated, ceiling: FusionCeiling = .medium, leverage: FusionLeverage = .high) {
         self.parameters = parameters
         self.priority = priority
-        self.size = size
+        self.ceiling = ceiling
         self.leverage = leverage
     }
 }

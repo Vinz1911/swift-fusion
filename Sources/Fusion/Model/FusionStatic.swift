@@ -8,21 +8,31 @@
 
 import Foundation
 
-/// The `FusionSize` to limit frame size
-public enum FusionSize: Sendable {
-    case low
-    case medium
-    case high
-    case custom(UInt32)
-    
-    /// The `FusionSize` raw value
-    var rawValue: UInt32 { switch self { case .low: 0x3FFFFF case .medium: 0x7FFFFF case .high: 0xFFFFFF case .custom(let size): size } }
+// MARK: - Leverage + Ceiling -
+
+/// The `FusionCeiling` to limit frame size
+@frozen
+public enum FusionCeiling: UInt32, Sendable {
+    case low       = 0x800000
+    case medium    = 0x1000000
+    case high      = 0x2000000
+    case extreme   = 0x4000000
+    case unlimited = 0xFFFFFFFF
+}
+
+/// The `NetworkConnection` receive connection leverage
+@frozen
+public enum FusionLeverage: UInt16, Sendable {
+    case low     = 0x2000
+    case medium  = 0x4000
+    case high    = 0x8000
+    case extreme = 0xFFFF
 }
 
 // MARK: - Message Flow Control -
 
 /// The `FusionStatic` for protocol constants
-enum FusionStatic: Int, Sendable {
+enum FusionStatic: UInt32, Sendable {
     case opcode = 0x1
     case header = 0x5
     case total  = 0xFFFFFFFF
@@ -34,17 +44,6 @@ enum FusionOpcode: UInt8, Sendable {
     case data   = 0x2
     case uint16 = 0x3
     
-    /// The `FusionOpcode`type mapping
-    var type: any FusionFrame.Type { switch self { case .string: String.self case .data: Data.self case .uint16: UInt16.self } }
-}
-
-// MARK: - Receive Leverage -
-
-/// The `NetworkConnection` receive connection leverage
-@frozen
-public enum FusionLeverage: Int, Sendable {
-    case low     = 0x2000
-    case medium  = 0x4000
-    case high    = 0x8000
-    case extreme = 0x10000
+    /// The `FusionOpcode`rawType mapping
+    var rawType: any FusionFrame.Type { switch self { case .string: String.self case .data: Data.self case .uint16: UInt16.self } }
 }

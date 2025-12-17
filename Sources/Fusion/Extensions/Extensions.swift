@@ -42,7 +42,7 @@ extension Data {
     /// - Parameter leverage: the size of each chunk as `Int`
     func chunks(of leverage: FusionLeverage) -> [Data] {
         if leverage == .extreme { return [self] }
-        let size: Int = Swift.min(leverage.rawValue, Int(UInt16.max / 2))
+        let size: Int = Swift.min(Int(leverage.rawValue), Int(UInt16.max / 2))
         return stride(from: .zero, to: count, by: size).map { subdata(in: $0..<(count - $0 > size ? $0 + size : count)) }
     }
     
@@ -62,7 +62,7 @@ extension UInt32 {
     /// The fusion frame payload range
     var payload: Range<Int>? {
         guard self >= FusionStatic.header.rawValue else { return nil }
-        return FusionStatic.header.rawValue..<Int(self)
+        return Int(FusionStatic.header.rawValue)..<Int(self)
     }
 }
 
@@ -74,7 +74,7 @@ extension Data {
     /// - Returns: the extracted length as `UInt32
     func length() throws(FusionFramerError) -> UInt32? {
         guard self.count >= FusionStatic.header.rawValue else { return nil }
-        let length = Data(self.subdata(in: FusionStatic.opcode.rawValue..<FusionStatic.header.rawValue)).endian
+        let length = Data(self.subdata(in: Int(FusionStatic.opcode.rawValue)..<Int(FusionStatic.header.rawValue))).endian
         if length != .zero { return length } else { throw FusionFramerError.invalid }
     }
     
@@ -86,6 +86,6 @@ extension Data {
     /// - Returns: the `FusionMessage`
     func decode(with opcode: UInt8, from length: UInt32) -> FusionFrame? {
         guard let range = length.payload else { return nil }
-        return FusionOpcode(rawValue: opcode)?.type.decode(from: Data(self.subdata(in: range)))
+        return FusionOpcode(rawValue: opcode)?.rawType.decode(from: Data(self.subdata(in: range)))
     }
 }
