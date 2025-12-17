@@ -33,7 +33,7 @@ actor FusionFramer: FusionFramerProtocol, Sendable {
     ///   - data: the `Data` slice of the `FusionMessage` conform to the `FusionFrame`
     ///   - size: the inbound buffer size limit from `FusionSize`
     /// - Returns: a collection of `FusionMessage`s conform to the `FusionFrame` and `Error`
-    func parse(data: Data, size: FusionSize = .custom(.max)) async throws(FusionFramerError) -> [FusionFrame] {
+    func parse(data: Data, size: FusionSize = .high) async throws(FusionFramerError) -> [FusionFrame] {
         var messages: [FusionFrame] = []; buffer.append(data)
         guard buffer.count <= FusionStatic.total.rawValue, buffer.count <= size.rawValue else { throw .inbound }
         guard buffer.count >= FusionStatic.header.rawValue else { return .init() }
