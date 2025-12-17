@@ -1,7 +1,8 @@
 # Fusion
 
-`Fusion` is a library which implements the `Fusion Framing Protocol (FFP)`. 
-The `Fusion Framing Protocol (FFP)` is proprietary networking protocol which uses a small and lightweight header with a performance as fast as raw tcp performance. Built directly on top of Apples `Network.framework` with support for plain tcp and tls encrypted connections. The implementation for the host is [Fusion](https://github.com/Vinz1911/fusion) written in golang with awesome concurrency support to ensure maximum performance.
+The `FusionConnection` is a custom network connector that implements the **Fusion Framing Protocol (FFP)**
+It is built on top of the standard `Network` framework library. This fast and lightweight custom framing protocol 
+enables high-speed data transmission and provides fine-grained control over network flow.
 
 # Overview
 | Swift Version                                                                                                | License                                                                                                                                              | Coverage                                                                                                                                              |
