@@ -11,16 +11,16 @@ import Network
 
 public protocol FusionParametersProtocol: Sendable {
     /// the underlying `NWParameters`
-    var parameters: NWParameters { get set }
+    var parameters: NWParameters { get }
     
     /// the `TaskPriority` for the connection
-    var priority: TaskPriority { get set }
+    var priority: TaskPriority { get }
     
     /// the maximum parser limit as `UInt32`
-    var size: FusionSize { get set }
+    var size: FusionSize { get }
     
     /// receive connection leverage `FusionLeverage`
-    var leverage: FusionLeverage { get set }
+    var leverage: FusionLeverage { get }
     
     /// The configurable `FusionParameters`
     ///

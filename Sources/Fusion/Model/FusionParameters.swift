@@ -13,10 +13,10 @@ import Network
 
 @frozen
 public struct FusionParameters: FusionParametersProtocol, Sendable {
-    public var parameters: NWParameters
-    public var priority: TaskPriority
-    public var size: FusionSize
-    public var leverage: FusionLeverage
+    public let parameters: NWParameters
+    public let priority: TaskPriority
+    public let size: FusionSize
+    public let leverage: FusionLeverage
     
     /// The configurable `FusionParameters`
     ///

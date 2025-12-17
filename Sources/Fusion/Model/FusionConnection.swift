@@ -12,9 +12,9 @@ import Network
 public actor FusionConnection: FusionConnectionProtocol, Sendable {
     private let framer = FusionFramer()
     private let (stream, continuation) = FusionStream.makeStream()
+    private let parameters: FusionParameters
     
-    private var parameters: FusionParameters
-    private var endpoint: NWEndpoint
+    private let endpoint: NWEndpoint
     private var connection: NetworkConnection<TCP>?
     private var process: Task<Void, Error>?
     
