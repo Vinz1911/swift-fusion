@@ -16,7 +16,7 @@ public enum FusionSize: Sendable {
     case custom(UInt32)
     
     /// The `FusionSize` raw value
-    var rawValue: UInt32 { switch self { case .low: 0x400000 case .medium: 0x800000 case .high: 0x1000000 case .custom(let size): size } }
+    var rawValue: UInt32 { switch self { case .low: 0x3FFFFF case .medium: 0x7FFFFF case .high: 0xFFFFFF case .custom(let size): size } }
 }
 
 // MARK: - Message Flow Control -
