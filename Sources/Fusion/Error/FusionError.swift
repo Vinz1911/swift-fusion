@@ -12,7 +12,7 @@ import Foundation
 
 /// The `FusionConnectionError` specific errors
 @frozen
-public enum FusionConnectionError: Error, Sendable {
+public enum FusionConnectionError: Error, CaseIterable, Sendable {
     case established
     case timeout
     
@@ -27,7 +27,7 @@ public enum FusionConnectionError: Error, Sendable {
 
 /// The `FusionFramerError` specific errors
 @frozen
-public enum FusionFramerError: Error, Sendable {
+public enum FusionFramerError: Error, CaseIterable, Sendable {
     case inbound
     case outbound
     case invalid

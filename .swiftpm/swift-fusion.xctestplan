@@ -1,0 +1,24 @@
+{
+  "configurations" : [
+    {
+      "id" : "A33FA293-4834-4FE3-9B9C-90E6D8D88D17",
+      "name" : "Test Scheme Action",
+      "options" : {
+
+      }
+    }
+  ],
+  "defaultOptions" : {
+    "performanceAntipatternCheckerEnabled" : true
+  },
+  "testTargets" : [
+    {
+      "target" : {
+        "containerPath" : "container:",
+        "identifier" : "FusionTests",
+        "name" : "FusionTests"
+      }
+    }
+  ],
+  "version" : 1
+}
